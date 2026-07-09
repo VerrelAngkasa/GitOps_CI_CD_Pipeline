@@ -1,0 +1,43 @@
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: '/api',
+  withCredentials: true,
+});
+
+export default api;
+
+export const currency = (n) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'IDR', maximumFractionDigits: 3 }).format(
+    Number(n || 0)
+  );
+
+export const monthLabel = (year, month) =>
+  new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+
+export const ASSET_TYPES = [
+  { value: 'cash', label: 'Cash' },
+  { value: 'bank', label: 'Bank account' },
+  { value: 'investment', label: 'Investment' },
+  { value: 'crypto', label: 'Crypto' },
+  { value: 'property', label: 'Property' },
+  { value: 'gold', label: 'Gold' },
+  { value: 'liability', label: 'Liability (loan, debt)' },
+  { value: 'other', label: 'Other' },
+];
+
+export const EXPENSE_CATEGORIES = [
+  'FnBs',
+  'Groceries',
+  'Transport',
+  'Shopping',
+  'Health & Sports',
+  'Entertainment',
+  'Bills & Utilities',
+  'Travel',
+  'Other',
+];
