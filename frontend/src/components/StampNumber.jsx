@@ -1,22 +1,21 @@
 import { currency } from '../lib/api';
 
-// The signature element: the headline net-worth figure rendered like a
-// ledger stamp validating the total, with a tabular mono typeface.
+// The signature element: headline figures rendered as a bold gradient
+// number in the display face, with a colored dot to key the reader in.
 export default function StampNumber({ label, value, tone = 'ink', size = 'lg' }) {
-  const toneClasses = {
-    ink: 'text-ink border-ink',
-    ledger: 'text-ledger border-ledger',
-    clay: 'text-clay border-clay',
-  }[tone];
-
-  const sizeClasses = size === 'lg' ? 'text-4xl md:text-5xl px-6 py-4' : 'text-2xl px-4 py-2.5';
+  const gradientClass = { ink: 'number-pop', ledger: 'number-pop-positive', clay: 'number-pop-negative' }[tone];
+  const dotClass = { ink: 'bg-primary', ledger: 'bg-ledger', clay: 'bg-clay' }[tone];
+  const sizeClass = size === 'lg' ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl';
 
   return (
     <div className="inline-block">
-      {label && <p className="text-xs uppercase tracking-wider text-slate mb-2 font-medium">{label}</p>}
-      <div className={`stamp inline-block ${sizeClasses}`}>
-        <span className={`font-mono mono-num font-semibold ${toneClasses.split(' ')[0]}`}>{currency(value)}</span>
-      </div>
+      {label && (
+        <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-slate mb-2 font-semibold">
+          <span className={`w-2 h-2 rounded-full ${dotClass}`} />
+          {label}
+        </p>
+      )}
+      <p className={`font-display font-bold ${sizeClass} ${gradientClass} leading-none`}>{currency(value)}</p>
     </div>
   );
 }

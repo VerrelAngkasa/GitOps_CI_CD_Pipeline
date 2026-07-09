@@ -13,16 +13,19 @@ db.pragma('foreign_keys = ON');
 db.exec(`
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  email TEXT UNIQUE NOT NULL,
+  username TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   display_name TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 -- One-off / daily expenses (groceries, coffee, gas, etc.)
+-- asset_id, when set, is the pocket the money actually came out of —
+-- adding/editing/deleting an expense with a pocket adjusts that pocket's balance.
 CREATE TABLE IF NOT EXISTS expenses (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  asset_id INTEGER REFERENCES assets(id) ON DELETE SET NULL,
   date TEXT NOT NULL,              -- YYYY-MM-DD
   category TEXT NOT NULL,
   description TEXT,
@@ -44,7 +47,7 @@ CREATE TABLE IF NOT EXISTS fixed_expenses (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- Assets (cash, bank, investments, property, vehicle, etc.)
+-- Assets / pockets (cash, bank, investments, property, vehicle, etc.)
 CREATE TABLE IF NOT EXISTS assets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -55,7 +58,9 @@ CREATE TABLE IF NOT EXISTS assets (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- Point-in-time value snapshots for an asset (also used for liabilities: negative amount)
+-- Point-in-time value snapshots for an asset (also used for liabilities: negative amount).
+-- Every income entry, expense against a pocket, or transfer writes a new row here so the
+-- pocket's "current balance" is always the latest snapshot.
 CREATE TABLE IF NOT EXISTS asset_values (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   asset_id INTEGER NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
@@ -64,10 +69,37 @@ CREATE TABLE IF NOT EXISTS asset_values (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Income landing in a specific pocket (salary, transfer in, gift, interest...)
+CREATE TABLE IF NOT EXISTS income_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  asset_id INTEGER NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+  date TEXT NOT NULL,
+  source TEXT NOT NULL,
+  description TEXT,
+  amount REAL NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Moving money between two pockets (e.g. Payroll -> Emergency Fund)
+CREATE TABLE IF NOT EXISTS transfers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  from_asset_id INTEGER NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+  to_asset_id INTEGER NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+  date TEXT NOT NULL,
+  description TEXT,
+  amount REAL NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_expenses_user_date ON expenses(user_id, date);
+CREATE INDEX IF NOT EXISTS idx_expenses_asset ON expenses(asset_id);
 CREATE INDEX IF NOT EXISTS idx_fixed_expenses_user ON fixed_expenses(user_id);
 CREATE INDEX IF NOT EXISTS idx_assets_user ON assets(user_id);
 CREATE INDEX IF NOT EXISTS idx_asset_values_asset_date ON asset_values(asset_id, date);
+CREATE INDEX IF NOT EXISTS idx_income_user_date ON income_entries(user_id, date);
+CREATE INDEX IF NOT EXISTS idx_transfers_user_date ON transfers(user_id, date);
 `);
 
 module.exports = db;

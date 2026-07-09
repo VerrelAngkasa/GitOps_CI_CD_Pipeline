@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -13,7 +13,7 @@ export default function Login() {
     setError('');
     setSubmitting(true);
     try {
-      await login(email, password);
+      await login(username, password);
     } catch (err) {
       setError(err.response?.data?.error || 'Could not log in.');
     } finally {
@@ -25,22 +25,26 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-paper px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-block stamp px-4 py-2 mb-4 rotate-[-1.5deg]">
-            <span className="font-display text-2xl font-semibold text-ink">MyLedger</span>
+          <div className="inline-flex items-center gap-2.5 mb-4">
+            <div className="badge-logo w-10 h-10 flex items-center justify-center shrink-0">
+              <span className="font-display text-xl font-bold text-white">L</span>
+            </div>
+            <span className="font-display text-2xl font-bold text-ink">MyLedger</span>
           </div>
           <h1 className="font-display text-2xl font-medium text-ink">Welcome back</h1>
         </div>
 
-        <form onSubmit={onSubmit} className="bg-card border border-line rounded-lg p-6 space-y-4 shadow-sm">
+        <form onSubmit={onSubmit} className="bg-card border border-line rounded-2xl p-6 space-y-4 shadow-sm">
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Email</label>
+            <label className="block text-sm font-medium text-ink mb-1">Username</label>
             <input
-              type="email"
+              type="text"
               required
               autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-line rounded-md px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-gold"
+              autoComplete="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full border border-line rounded-xl px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <div>
@@ -50,7 +54,7 @@ export default function Login() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-line rounded-md px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-gold"
+              className="w-full border border-line rounded-xl px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
@@ -61,7 +65,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-ink text-paper font-medium rounded-md py-2.5 hover:bg-ink-light transition-colors disabled:opacity-60"
+            className="w-full bg-primary text-white font-semibold rounded-xl py-2.5 shadow-md shadow-primary/30 hover:bg-primary-dark transition-colors disabled:opacity-60"
           >
             {submitting ? 'Signing in…' : 'Sign in'}
           </button>

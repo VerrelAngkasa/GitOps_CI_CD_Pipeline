@@ -8,16 +8,18 @@ const api = axios.create({
 export default api;
 
 export const currency = (n) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'IDR', maximumFractionDigits: 3 }).format(
+  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(
     Number(n || 0)
   );
 
 export const monthLabel = (year, month) =>
-  new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('en-US', {
+  new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('id-ID', {
     month: 'long',
     year: 'numeric',
     timeZone: 'UTC',
   });
+
+export const percent = (n) => `${Number(n || 0).toFixed(1)}%`;
 
 export const ASSET_TYPES = [
   { value: 'cash', label: 'Cash' },
@@ -25,17 +27,17 @@ export const ASSET_TYPES = [
   { value: 'investment', label: 'Investment' },
   { value: 'crypto', label: 'Crypto' },
   { value: 'property', label: 'Property' },
-  { value: 'gold', label: 'Gold' },
+  { value: 'vehicle', label: 'Vehicle' },
   { value: 'liability', label: 'Liability (loan, debt)' },
   { value: 'other', label: 'Other' },
 ];
 
 export const EXPENSE_CATEGORIES = [
-  'FnBs',
   'Groceries',
+  'Dining',
   'Transport',
   'Shopping',
-  'Health & Sports',
+  'Health',
   'Entertainment',
   'Bills & Utilities',
   'Travel',

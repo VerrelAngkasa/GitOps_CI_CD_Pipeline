@@ -5,6 +5,8 @@ const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/expenses', label: 'Daily Expenses' },
   { to: '/fixed-expenses', label: 'Fixed Expenses' },
+  { to: '/income', label: 'Income' },
+  { to: '/transfers', label: 'Transfers' },
   { to: '/assets', label: 'Assets' },
   { to: '/reports', label: 'Monthly Report' },
 ];
@@ -16,8 +18,11 @@ export default function Layout() {
     <div className="min-h-screen bg-paper flex">
       <aside className="w-60 shrink-0 border-r border-line bg-card flex flex-col">
         <div className="px-6 py-6 border-b border-line">
-          <div className="inline-block stamp px-3 py-1.5 rotate-[-1.5deg]">
-            <span className="font-display text-lg font-semibold text-ink">MyLedger</span>
+          <div className="flex items-center gap-2.5">
+            <div className="badge-logo w-9 h-9 flex items-center justify-center shrink-0">
+              <span className="font-display text-lg font-bold text-white">L</span>
+            </div>
+            <span className="font-display text-xl font-bold text-ink">MyLedger</span>
           </div>
         </div>
 
@@ -28,8 +33,10 @@ export default function Layout() {
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive ? 'bg-ink text-paper' : 'text-ink hover:bg-paper-dim'
+                `block px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  isActive
+                    ? 'bg-primary text-white shadow-md shadow-primary/30'
+                    : 'text-ink hover:bg-paper-dim'
                 }`
               }
             >
@@ -39,10 +46,10 @@ export default function Layout() {
         </nav>
 
         <div className="px-4 py-4 border-t border-line">
-          <p className="text-xs text-slate mb-2 truncate">{user?.email}</p>
+          <p className="text-xs text-slate mb-2 truncate">@{user?.username}</p>
           <button
             onClick={logout}
-            className="text-sm text-clay font-medium hover:underline"
+            className="text-sm text-clay font-semibold hover:underline"
           >
             Sign out
           </button>

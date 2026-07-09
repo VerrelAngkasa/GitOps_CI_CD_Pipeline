@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api, { currency, ASSET_TYPES } from '../lib/api';
+import api, { currency, percent, ASSET_TYPES } from '../lib/api';
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -10,6 +10,7 @@ export default function Assets() {
   const [form, setForm] = useState({ name: '', type: 'bank', notes: '', initialValue: '', date: todayISO() });
   const [submitting, setSubmitting] = useState(false);
   const [updatingAsset, setUpdatingAsset] = useState(null);
+  const [historyAsset, setHistoryAsset] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -56,30 +57,30 @@ export default function Assets() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-medium text-ink">Assets</h1>
+        <h1 className="font-display text-3xl font-bold text-ink">Assets &amp; pockets</h1>
         <p className="text-slate mt-1">Track what you own and owe. Update values whenever a balance changes.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-card border border-line rounded-lg p-4">
-          <p className="text-xs uppercase tracking-wider text-slate font-medium mb-2">Total assets</p>
-          <p className="font-mono mono-num text-2xl font-semibold text-ledger">{currency(totalAssets)}</p>
+        <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+          <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Total assets</p>
+          <p className="font-mono mono-num text-2xl font-bold text-ledger">{currency(totalAssets)}</p>
         </div>
-        <div className="bg-card border border-line rounded-lg p-4">
-          <p className="text-xs uppercase tracking-wider text-slate font-medium mb-2">Total liabilities</p>
-          <p className="font-mono mono-num text-2xl font-semibold text-clay">{currency(totalLiabilities)}</p>
+        <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+          <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Total liabilities</p>
+          <p className="font-mono mono-num text-2xl font-bold text-clay">{currency(totalLiabilities)}</p>
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="bg-card border border-line rounded-lg p-5 grid grid-cols-1 sm:grid-cols-6 gap-3 items-end">
+      <form onSubmit={onSubmit} className="bg-card border border-line rounded-2xl shadow-sm p-5 grid grid-cols-1 sm:grid-cols-6 gap-3 items-end">
         <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-ink mb-1">Name</label>
           <input
             type="text"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="e.g. Chase Checking"
-            className="w-full border border-line rounded-md px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-gold"
+            placeholder="e.g. Emergency Fund"
+            className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div className="sm:col-span-1">
@@ -87,7 +88,7 @@ export default function Assets() {
           <select
             value={form.type}
             onChange={(e) => setForm({ ...form, type: e.target.value })}
-            className="w-full border border-line rounded-md px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-gold"
+            className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {ASSET_TYPES.map((t) => (
               <option key={t.value} value={t.value}>
@@ -100,12 +101,12 @@ export default function Assets() {
           <label className="block text-xs font-medium text-ink mb-1">Value</label>
           <input
             type="number"
-            step="0.01"
+            step="1000"
             value={form.initialValue}
             onChange={(e) => setForm({ ...form, initialValue: e.target.value })}
-            placeholder="0.00"
+            placeholder="0"
             title="Use a negative number for liabilities like loans"
-            className="w-full border border-line rounded-md px-2.5 py-2 bg-paper text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gold"
+            className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div className="sm:col-span-1">
@@ -114,7 +115,7 @@ export default function Assets() {
             type="date"
             value={form.date}
             onChange={(e) => setForm({ ...form, date: e.target.value })}
-            className="w-full border border-line rounded-md px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-gold"
+            className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div className="sm:col-span-1">
@@ -124,7 +125,7 @@ export default function Assets() {
             value={form.notes}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
             placeholder="Optional"
-            className="w-full border border-line rounded-md px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-gold"
+            className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div className="sm:col-span-6">
@@ -133,7 +134,7 @@ export default function Assets() {
           <button
             type="submit"
             disabled={submitting}
-            className="bg-ink text-paper font-medium rounded-md px-4 py-2 text-sm hover:bg-ink-light transition-colors disabled:opacity-60"
+            className="bg-primary text-white font-semibold rounded-xl px-4 py-2 text-sm shadow-md shadow-primary/25 hover:bg-primary-dark transition-colors disabled:opacity-60"
           >
             Add asset
           </button>
@@ -143,21 +144,26 @@ export default function Assets() {
       {loading ? (
         <p className="text-slate text-sm">Loading…</p>
       ) : assets.length === 0 ? (
-        <p className="text-slate text-sm bg-card border border-line rounded-lg p-6 text-center">
+        <p className="text-slate text-sm bg-card border border-line rounded-2xl shadow-sm p-6 text-center">
           No assets yet. Add a bank account, cash, or investment above.
         </p>
       ) : (
         <div className="space-y-6">
           {grouped.map((g) => (
             <div key={g.value}>
-              <h3 className="text-xs uppercase tracking-wider text-slate font-medium mb-2">{g.label}</h3>
-              <div className="bg-card border border-line rounded-lg overflow-hidden">
+              <h3 className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">{g.label}</h3>
+              <div className="bg-card border border-line rounded-2xl shadow-sm overflow-hidden">
                 <table className="w-full text-sm">
                   <tbody>
                     {g.items.map((a) => (
                       <tr key={a.id} className="border-t border-line/70 first:border-t-0 hover:bg-paper-dim/50">
                         <td className="px-4 py-3 text-ink font-medium">{a.name}</td>
                         <td className="px-4 py-3 text-slate">{a.notes}</td>
+                        <td className="px-4 py-3 text-right">
+                          {a.currentValue >= 0 && (
+                            <span className="text-xs text-slate font-mono mono-num mr-2">{percent(a.percentage)}</span>
+                          )}
+                        </td>
                         <td
                           className={`px-4 py-3 text-right font-mono mono-num font-semibold ${
                             a.currentValue < 0 ? 'text-clay' : 'text-ink'
@@ -167,8 +173,14 @@ export default function Assets() {
                         </td>
                         <td className="px-4 py-3 text-right whitespace-nowrap">
                           <button
-                            onClick={() => setUpdatingAsset(a)}
+                            onClick={() => setHistoryAsset(a)}
                             className="text-ink text-xs font-medium hover:underline mr-3"
+                          >
+                            History
+                          </button>
+                          <button
+                            onClick={() => setUpdatingAsset(a)}
+                            className="text-primary text-xs font-medium hover:underline mr-3"
                           >
                             Update value
                           </button>
@@ -194,6 +206,14 @@ export default function Assets() {
             setUpdatingAsset(null);
             load();
           }}
+        />
+      )}
+
+      {historyAsset && (
+        <HistoryModal
+          asset={historyAsset}
+          onClose={() => setHistoryAsset(null)}
+          onChanged={load}
         />
       )}
     </div>
@@ -226,20 +246,20 @@ function UpdateValueModal({ asset, onClose, onSaved }) {
 
   return (
     <div className="fixed inset-0 bg-ink/40 flex items-center justify-center px-4 z-50" onClick={onClose}>
-      <div className="bg-card border border-line rounded-lg p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-display text-lg font-medium text-ink mb-1">Update value</h3>
+      <div className="bg-card border border-line rounded-2xl shadow-lg p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-display text-lg font-bold text-ink mb-1">Update value</h3>
         <p className="text-sm text-slate mb-4">{asset.name}</p>
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <label className="block text-xs font-medium text-ink mb-1">New value</label>
             <input
               type="number"
-              step="0.01"
+              step="1000"
               autoFocus
               value={value}
               onChange={(e) => setValue(e.target.value)}
               placeholder={String(asset.currentValue)}
-              className="w-full border border-line rounded-md px-2.5 py-2 bg-paper text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gold"
+              className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <div>
@@ -248,7 +268,7 @@ function UpdateValueModal({ asset, onClose, onSaved }) {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full border border-line rounded-md px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-gold"
+              className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           {error && <p className="text-clay text-sm">{error}</p>}
@@ -256,19 +276,93 @@ function UpdateValueModal({ asset, onClose, onSaved }) {
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 bg-ink text-paper font-medium rounded-md py-2 text-sm hover:bg-ink-light transition-colors disabled:opacity-60"
+              className="flex-1 bg-primary text-white font-semibold rounded-xl py-2 text-sm shadow-md shadow-primary/25 hover:bg-primary-dark transition-colors disabled:opacity-60"
             >
               Save
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border border-line text-ink font-medium rounded-md py-2 text-sm hover:bg-paper-dim transition-colors"
+              className="flex-1 border border-line text-ink font-semibold rounded-xl py-2 text-sm hover:bg-paper-dim transition-colors"
             >
               Cancel
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function HistoryModal({ asset, onClose, onChanged }) {
+  const [values, setValues] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = () => {
+    setLoading(true);
+    api.get(`/assets/${asset.id}/values`).then((res) => {
+      setValues(res.data.slice().reverse()); // newest first
+      setLoading(false);
+    });
+  };
+
+  useEffect(load, []);
+
+  const onDeleteEntry = async (valueId) => {
+    await api.delete(`/assets/${asset.id}/values/${valueId}`);
+    load();
+    onChanged();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-ink/40 flex items-center justify-center px-4 z-50" onClick={onClose}>
+      <div className="bg-card border border-line rounded-2xl shadow-lg p-6 w-full max-w-md max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-display text-lg font-bold text-ink mb-1">Value history</h3>
+        <p className="text-sm text-slate mb-4">
+          {asset.name} — delete a mis-entered snapshot below. The most recent remaining entry becomes the current
+          balance.
+        </p>
+
+        <div className="flex-1 overflow-y-auto -mx-2 px-2">
+          {loading ? (
+            <p className="text-slate text-sm">Loading…</p>
+          ) : values.length === 0 ? (
+            <p className="text-slate text-sm text-center py-6">No value history yet.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <tbody>
+                {values.map((v, i) => (
+                  <tr key={v.id} className="border-t border-line/70 first:border-t-0">
+                    <td className="py-2.5 text-ink">{v.date}</td>
+                    <td className="py-2.5 text-right font-mono mono-num text-ink">
+                      {currency(v.value)}
+                      {i === 0 && (
+                        <span className="ml-2 text-[10px] uppercase tracking-wide text-primary font-semibold">
+                          current
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 text-right pl-3">
+                      <button
+                        onClick={() => onDeleteEntry(v.id)}
+                        className="text-clay text-xs font-medium hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <button
+          onClick={onClose}
+          className="mt-4 border border-line text-ink font-semibold rounded-xl py-2 text-sm hover:bg-paper-dim transition-colors"
+        >
+          Close
+        </button>
       </div>
     </div>
   );

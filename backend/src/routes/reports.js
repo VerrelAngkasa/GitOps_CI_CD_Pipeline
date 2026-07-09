@@ -45,10 +45,15 @@ router.get('/monthly', (req, res) => {
     .prepare('SELECT * FROM expenses WHERE user_id = ? AND date >= ? AND date <= ? ORDER BY date')
     .all(req.userId, start, end);
 
+  const income = db
+    .prepare('SELECT * FROM income_entries WHERE user_id = ? AND date >= ? AND date <= ? ORDER BY date')
+    .all(req.userId, start, end);
+
   const fixed = fixedExpensesForMonth(req.userId, start, end);
 
   const totalDaily = dailyExpenses.reduce((s, e) => s + e.amount, 0);
   const totalFixed = fixed.reduce((s, e) => s + e.amount, 0);
+  const totalIncome = income.reduce((s, e) => s + e.amount, 0);
 
   const byCategoryMap = {};
   for (const e of dailyExpenses) {
@@ -73,6 +78,11 @@ router.get('/monthly', (req, res) => {
       .get(a.id, end);
     return { id: a.id, name: a.name, type: a.type, value: row ? row.value : 0 };
   });
+  const totalPositive = assetBreakdown.reduce((s, a) => s + (a.value > 0 ? a.value : 0), 0);
+  const assetBreakdownWithPct = assetBreakdown.map((a) => ({
+    ...a,
+    percentage: totalPositive > 0 && a.value > 0 ? (a.value / totalPositive) * 100 : 0,
+  }));
 
   res.json({
     year,
@@ -80,10 +90,13 @@ router.get('/monthly', (req, res) => {
     range: { start, end },
     dailyExpenses,
     fixedExpenses: fixed,
+    income,
     totals: {
       daily: totalDaily,
       fixed: totalFixed,
       combined: totalDaily + totalFixed,
+      income: totalIncome,
+      net: totalIncome - (totalDaily + totalFixed),
     },
     byCategory,
     netWorth: {
@@ -91,7 +104,7 @@ router.get('/monthly', (req, res) => {
       previous: previousNetWorth,
       change: currentNetWorth - previousNetWorth,
     },
-    assetBreakdown,
+    assetBreakdown: assetBreakdownWithPct,
   });
 });
 
@@ -134,6 +147,10 @@ router.get('/summary', (req, res) => {
     .prepare('SELECT COALESCE(SUM(amount),0) as total FROM expenses WHERE user_id = ? AND date >= ? AND date <= ?')
     .get(req.userId, start, today).total;
 
+  const monthToDateIncome = db
+    .prepare('SELECT COALESCE(SUM(amount),0) as total FROM income_entries WHERE user_id = ? AND date >= ? AND date <= ?')
+    .get(req.userId, start, today).total;
+
   const fixed = fixedExpensesForMonth(req.userId, start, end);
   const totalFixed = fixed.reduce((s, e) => s + e.amount, 0);
 
@@ -147,6 +164,7 @@ router.get('/summary', (req, res) => {
     totalLiabilities,
     assetCount: assets.length,
     monthToDateExpenses,
+    monthToDateIncome,
     monthFixedExpenses: totalFixed,
     netWorthChange: netWorth - previousNetWorth,
   });

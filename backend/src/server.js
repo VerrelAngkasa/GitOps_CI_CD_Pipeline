@@ -10,6 +10,8 @@ const expenseRoutes = require('./routes/expenses');
 const fixedExpenseRoutes = require('./routes/fixedExpenses');
 const assetRoutes = require('./routes/assets');
 const reportRoutes = require('./routes/reports');
+const incomeRoutes = require('./routes/income');
+const transferRoutes = require('./routes/transfers');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -30,6 +32,8 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/fixed-expenses', fixedExpenseRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/income', incomeRoutes);
+app.use('/api/transfers', transferRoutes);
 
 // Fallback error handler
 app.use((err, req, res, next) => {

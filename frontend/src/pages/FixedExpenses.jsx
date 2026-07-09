@@ -64,7 +64,7 @@ export default function FixedExpenses() {
         <p className="text-slate mt-1">Rent, subscriptions, insurance — the recurring line items that repeat every month.</p>
       </div>
 
-      <form onSubmit={onSubmit} className="bg-card border border-line rounded-lg p-5 grid grid-cols-1 sm:grid-cols-6 gap-3 items-end">
+      <form onSubmit={onSubmit} className="bg-card border border-line rounded-2xl shadow-sm p-5 grid grid-cols-1 sm:grid-cols-6 gap-3 items-end">
         <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-ink mb-1">Name</label>
           <input
@@ -72,7 +72,7 @@ export default function FixedExpenses() {
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="e.g. Rent"
-            className="w-full border border-line rounded-md px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-gold"
+            className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div className="sm:col-span-1">
@@ -80,7 +80,7 @@ export default function FixedExpenses() {
           <select
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
-            className="w-full border border-line rounded-md px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-gold"
+            className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {EXPENSE_CATEGORIES.map((c) => (
               <option key={c} value={c}>
@@ -93,12 +93,12 @@ export default function FixedExpenses() {
           <label className="block text-xs font-medium text-ink mb-1">Amount</label>
           <input
             type="number"
-            step="0.01"
+            step="1000"
             min="0"
             value={form.amount}
             onChange={(e) => setForm({ ...form, amount: e.target.value })}
-            placeholder="0.00"
-            className="w-full border border-line rounded-md px-2.5 py-2 bg-paper text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gold"
+            placeholder="0"
+            className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div className="sm:col-span-1">
@@ -109,7 +109,7 @@ export default function FixedExpenses() {
             max="28"
             value={form.dayOfMonth}
             onChange={(e) => setForm({ ...form, dayOfMonth: e.target.value })}
-            className="w-full border border-line rounded-md px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-gold"
+            className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div className="sm:col-span-1">
@@ -118,7 +118,7 @@ export default function FixedExpenses() {
             type="date"
             value={form.startDate}
             onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-            className="w-full border border-line rounded-md px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-gold"
+            className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <div className="sm:col-span-6">
@@ -126,7 +126,7 @@ export default function FixedExpenses() {
           <button
             type="submit"
             disabled={submitting}
-            className="bg-ink text-paper font-medium rounded-md px-4 py-2 text-sm hover:bg-ink-light transition-colors disabled:opacity-60"
+            className="bg-primary text-white font-semibold rounded-xl px-4 py-2 text-sm shadow-md shadow-primary/25 hover:bg-primary-dark transition-colors disabled:opacity-60"
           >
             Add fixed expense
           </button>
@@ -145,11 +145,11 @@ export default function FixedExpenses() {
         {loading ? (
           <p className="text-slate text-sm">Loading…</p>
         ) : items.length === 0 ? (
-          <p className="text-slate text-sm bg-card border border-line rounded-lg p-6 text-center">
+          <p className="text-slate text-sm bg-card border border-line rounded-2xl shadow-sm p-6 text-center">
             No fixed expenses yet. Add rent, subscriptions, or bills above.
           </p>
         ) : (
-          <div className="bg-card border border-line rounded-lg overflow-hidden">
+          <div className="bg-card border border-line rounded-2xl shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="ledger-rule-single text-left text-xs uppercase tracking-wider text-slate">

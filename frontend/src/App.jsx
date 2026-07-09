@@ -6,6 +6,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import FixedExpenses from './pages/FixedExpenses';
+import Income from './pages/Income';
+import Transfers from './pages/Transfers';
 import Assets from './pages/Assets';
 import Reports from './pages/Reports';
 
@@ -32,6 +34,8 @@ function AppRoutes() {
           <Route index element={<Dashboard />} />
           <Route path="expenses" element={<Expenses />} />
           <Route path="fixed-expenses" element={<FixedExpenses />} />
+          <Route path="income" element={<Income />} />
+          <Route path="transfers" element={<Transfers />} />
           <Route path="assets" element={<Assets />} />
           <Route path="reports" element={<Reports />} />
           <Route path="*" element={<Navigate to="/" replace />} />

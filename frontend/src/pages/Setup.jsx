@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Setup() {
   const { register } = useAuth();
-  const [form, setForm] = useState({ displayName: '', email: '', password: '', confirm: '' });
+  const [form, setForm] = useState({ displayName: '', username: '', password: '', confirm: '' });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -20,7 +20,7 @@ export default function Setup() {
     }
     setSubmitting(true);
     try {
-      await register(form.email, form.password, form.displayName);
+      await register(form.username, form.password, form.displayName);
     } catch (err) {
       setError(err.response?.data?.error || 'Something went wrong. Please try again.');
     } finally {
@@ -32,8 +32,11 @@ export default function Setup() {
     <div className="min-h-screen flex items-center justify-center bg-paper px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-block stamp px-4 py-2 mb-4 rotate-[-1.5deg]">
-            <span className="font-display text-2xl font-semibold text-ink">Ledger</span>
+          <div className="inline-flex items-center gap-2.5 mb-4">
+            <div className="badge-logo w-10 h-10 flex items-center justify-center shrink-0">
+              <span className="font-display text-xl font-bold text-white">L</span>
+            </div>
+            <span className="font-display text-2xl font-bold text-ink">MyLedger</span>
           </div>
           <h1 className="font-display text-2xl font-medium text-ink">Set up your ledger</h1>
           <p className="text-slate mt-2 text-sm">
@@ -41,26 +44,27 @@ export default function Setup() {
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="bg-card border border-line rounded-lg p-6 space-y-4 shadow-sm">
+        <form onSubmit={onSubmit} className="bg-card border border-line rounded-2xl p-6 space-y-4 shadow-sm">
           <div>
             <label className="block text-sm font-medium text-ink mb-1">Name</label>
             <input
               type="text"
               value={form.displayName}
               onChange={(e) => setForm({ ...form, displayName: e.target.value })}
-              className="w-full border border-line rounded-md px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-gold"
+              className="w-full border border-line rounded-xl px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Your name"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Email</label>
+            <label className="block text-sm font-medium text-ink mb-1">Username</label>
             <input
-              type="email"
+              type="text"
               required
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full border border-line rounded-md px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-gold"
-              placeholder="you@example.com"
+              autoComplete="username"
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              className="w-full border border-line rounded-xl px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="e.g. budi"
             />
           </div>
           <div>
@@ -70,7 +74,7 @@ export default function Setup() {
               required
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="w-full border border-line rounded-md px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-gold"
+              className="w-full border border-line rounded-xl px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="At least 8 characters"
             />
           </div>
@@ -81,7 +85,7 @@ export default function Setup() {
               required
               value={form.confirm}
               onChange={(e) => setForm({ ...form, confirm: e.target.value })}
-              className="w-full border border-line rounded-md px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-gold"
+              className="w-full border border-line rounded-xl px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
@@ -92,7 +96,7 @@ export default function Setup() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-ink text-paper font-medium rounded-md py-2.5 hover:bg-ink-light transition-colors disabled:opacity-60"
+            className="w-full bg-primary text-white font-semibold rounded-xl py-2.5 shadow-md shadow-primary/30 hover:bg-primary-dark transition-colors disabled:opacity-60"
           >
             {submitting ? 'Creating account…' : 'Create account'}
           </button>

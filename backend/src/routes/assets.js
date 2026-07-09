@@ -12,7 +12,7 @@ function latestValueForAsset(assetId) {
   return row ? row.value : 0;
 }
 
-// List assets with their current (latest) value attached
+// List assets with their current (latest) value and share of total assets attached
 router.get('/', (req, res) => {
   const includeArchived = req.query.includeArchived === 'true';
   let sql = 'SELECT * FROM assets WHERE user_id = ?';
@@ -21,7 +21,15 @@ router.get('/', (req, res) => {
 
   const assets = db.prepare(sql).all(req.userId);
   const withValues = assets.map((a) => ({ ...a, currentValue: latestValueForAsset(a.id) }));
-  res.json(withValues);
+
+  // Percentage is of total *positive* value (liabilities shown as negative, excluded from the base)
+  const totalPositive = withValues.reduce((s, a) => s + (a.currentValue > 0 ? a.currentValue : 0), 0);
+  const withPercentage = withValues.map((a) => ({
+    ...a,
+    percentage: totalPositive > 0 && a.currentValue > 0 ? (a.currentValue / totalPositive) * 100 : 0,
+  }));
+
+  res.json(withPercentage);
 });
 
 router.post('/', (req, res) => {
