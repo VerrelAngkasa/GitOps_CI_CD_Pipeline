@@ -36,6 +36,19 @@ function fixedExpensesForMonth(userId, monthStart, monthEnd) {
     .all(userId, monthEnd, monthStart);
 }
 
+// The quota set for this exact month, or the most recent earlier one carried forward.
+function resolveQuota(userId, year, month) {
+  const row = db
+    .prepare(
+      `SELECT * FROM spending_quotas
+       WHERE user_id = ? AND (year < ? OR (year = ? AND month <= ?))
+       ORDER BY year DESC, month DESC LIMIT 1`
+    )
+    .get(userId, year, year, month);
+  if (!row) return null;
+  return { amount: row.amount, isExact: row.year === year && row.month === month, setFor: { year: row.year, month: row.month } };
+}
+
 router.get('/monthly', (req, res) => {
   const year = Number(req.query.year) || Number(todayISO().slice(0, 4));
   const month = Number(req.query.month) || Number(todayISO().slice(5, 7));
@@ -84,6 +97,9 @@ router.get('/monthly', (req, res) => {
     percentage: totalPositive > 0 && a.value > 0 ? (a.value / totalPositive) * 100 : 0,
   }));
 
+  const quota = resolveQuota(req.userId, year, month);
+  const spendingLeft = quota ? quota.amount - totalDaily : null;
+
   res.json({
     year,
     month,
@@ -105,6 +121,9 @@ router.get('/monthly', (req, res) => {
       change: currentNetWorth - previousNetWorth,
     },
     assetBreakdown: assetBreakdownWithPct,
+    quota: quota
+      ? { amount: quota.amount, isExact: quota.isExact, setFor: quota.setFor, left: spendingLeft }
+      : null,
   });
 });
 
@@ -168,6 +187,32 @@ router.get('/summary', (req, res) => {
     monthFixedExpenses: totalFixed,
     netWorthChange: netWorth - previousNetWorth,
   });
+});
+
+// Get or set the spending quota for a specific month
+router.get('/quota', (req, res) => {
+  const year = Number(req.query.year) || Number(todayISO().slice(0, 4));
+  const month = Number(req.query.month) || Number(todayISO().slice(5, 7));
+  const quota = resolveQuota(req.userId, year, month);
+  res.json(quota || { amount: null, isExact: false, setFor: null, left: null });
+});
+
+router.put('/quota', (req, res) => {
+  const { year, month, amount } = req.body || {};
+  if (!year || !month || amount === undefined) {
+    return res.status(400).json({ error: 'year, month and amount are required.' });
+  }
+  const amt = Number(amount);
+  if (Number.isNaN(amt) || amt < 0) {
+    return res.status(400).json({ error: 'amount must be a non-negative number.' });
+  }
+
+  db.prepare(
+    `INSERT INTO spending_quotas (user_id, year, month, amount) VALUES (?, ?, ?, ?)
+     ON CONFLICT(user_id, year, month) DO UPDATE SET amount = excluded.amount`
+  ).run(req.userId, year, month, amt);
+
+  res.json({ year, month, amount: amt });
 });
 
 module.exports = router;

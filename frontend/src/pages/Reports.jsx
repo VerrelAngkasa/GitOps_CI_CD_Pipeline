@@ -123,6 +123,8 @@ export default function Reports() {
             </div>
           </div>
 
+          <QuotaCard report={report} year={year} month={month} onSaved={(updated) => setReport(updated)} />
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <h2 className="font-display text-lg font-bold text-ink mb-4">Spending by category</h2>
@@ -309,6 +311,130 @@ export default function Reports() {
                 </table>
               </div>
             )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function QuotaCard({ report, year, month, onSaved }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const quota = report.quota;
+  const spent = report.totals.daily;
+  const spentPct = quota?.amount ? Math.min(100, (spent / quota.amount) * 100) : 0;
+  const over = quota && quota.left < 0;
+
+  const startEditing = () => {
+    setValue(quota?.amount ? String(quota.amount) : '');
+    setError('');
+    setEditing(true);
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    const amt = Number(value);
+    if (!value || Number.isNaN(amt) || amt < 0) {
+      setError('Enter a valid amount.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await api.put('/reports/quota', { year, month, amount: amt });
+      const res = await api.get(`/reports/monthly?year=${year}&month=${month}`);
+      onSaved(res.data);
+      setEditing(false);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Could not save quota.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bg-card border border-line rounded-2xl shadow-sm p-5">
+      <div className="flex items-start justify-between flex-wrap gap-3 mb-3">
+        <div>
+          <h2 className="font-display text-lg font-bold text-ink">Spending quota</h2>
+          {quota?.amount != null && !quota.isExact && (
+            <p className="text-xs text-slate mt-0.5">
+              Carried forward from {monthLabel(quota.setFor.year, quota.setFor.month)} — set one for this month to
+              override it.
+            </p>
+          )}
+        </div>
+        {!editing && (
+          <button
+            onClick={startEditing}
+            className="text-primary text-xs font-semibold hover:underline"
+          >
+            {quota?.amount != null ? 'Edit quota' : 'Set a quota'}
+          </button>
+        )}
+      </div>
+
+      {editing ? (
+        <form onSubmit={onSubmit} className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-xs font-medium text-ink mb-1">Monthly quota</label>
+            <input
+              type="number"
+              step="1000"
+              min="0"
+              autoFocus
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder="e.g. 1500000"
+              className="border border-line rounded-xl px-2.5 py-2 bg-paper text-sm font-mono w-48 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="bg-primary text-white font-semibold rounded-xl px-4 py-2 text-sm shadow-md shadow-primary/25 hover:bg-primary-dark transition-colors disabled:opacity-60"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            className="border border-line text-ink font-semibold rounded-xl px-4 py-2 text-sm hover:bg-paper-dim transition-colors"
+          >
+            Cancel
+          </button>
+          {error && <p className="text-clay text-sm w-full">{error}</p>}
+        </form>
+      ) : quota?.amount == null ? (
+        <p className="text-slate text-sm">
+          No quota set yet for {monthLabel(year, month)}. Set one to track how much you have left to spend.
+        </p>
+      ) : (
+        <>
+          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 mb-3">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-1">
+                {over ? 'Over by' : 'Left to spend'}
+              </p>
+              <p className={`font-mono mono-num text-2xl font-bold ${over ? 'text-clay' : 'text-ledger'}`}>
+                {currency(Math.abs(quota.left))}
+              </p>
+            </div>
+            <p className="text-sm text-slate">
+              <span className="font-mono mono-num text-ink font-semibold">{currency(spent)}</span> of{' '}
+              <span className="font-mono mono-num text-ink font-semibold">{currency(quota.amount)}</span>
+              <span className="block text-xs text-slate/80 mt-0.5">Daily spending only — fixed bills aren't counted.</span>
+            </p>
+          </div>
+          <div className="h-2.5 w-full bg-paper-dim rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${over ? 'bg-clay' : spentPct > 80 ? 'bg-gold' : 'bg-ledger'}`}
+              style={{ width: `${Math.max(4, spentPct)}%` }}
+            />
           </div>
         </>
       )}

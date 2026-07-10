@@ -93,6 +93,31 @@ CREATE TABLE IF NOT EXISTS transfers (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Monthly spending quota (budget). Set for a specific year/month; if a month
+-- has none, the most recent earlier quota carries forward.
+CREATE TABLE IF NOT EXISTS spending_quotas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  year INTEGER NOT NULL,
+  month INTEGER NOT NULL,
+  amount REAL NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(user_id, year, month)
+);
+
+-- Monthly spending quota (a budget for daily expenses only, not fixed bills).
+-- If no row exists for a given month, the most recent earlier month's quota
+-- carries forward, same as a budget that stays put until you change it.
+CREATE TABLE IF NOT EXISTS spending_quotas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  year INTEGER NOT NULL,
+  month INTEGER NOT NULL,
+  amount REAL NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(user_id, year, month)
+);
+
 CREATE INDEX IF NOT EXISTS idx_expenses_user_date ON expenses(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_expenses_asset ON expenses(asset_id);
 CREATE INDEX IF NOT EXISTS idx_fixed_expenses_user ON fixed_expenses(user_id);
@@ -100,6 +125,7 @@ CREATE INDEX IF NOT EXISTS idx_assets_user ON assets(user_id);
 CREATE INDEX IF NOT EXISTS idx_asset_values_asset_date ON asset_values(asset_id, date);
 CREATE INDEX IF NOT EXISTS idx_income_user_date ON income_entries(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_transfers_user_date ON transfers(user_id, date);
+CREATE INDEX IF NOT EXISTS idx_quotas_user_period ON spending_quotas(user_id, year, month);
 `);
 
 module.exports = db;

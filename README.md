@@ -94,6 +94,12 @@ want to include in net worth.
   reporting/projection. These are not tied to a pocket balance automatically,
   since they represent a recurring obligation rather than a single booked
   transaction.
+- **Spending quota** — an optional monthly budget, set from the Monthly
+  Report page. It's reduced only by **Daily Expenses** — fixed bills never
+  count against it, since a quota is meant to track discretionary spending.
+  If you don't set a quota for a given month, the most recent earlier one
+  carries forward automatically; setting a new amount for a month overrides
+  that just for that month onward.
 
 Every pocket's "current value" is always its most recent recorded balance.
 Income, transfers, and pocket-linked expenses all write a new balance
@@ -121,9 +127,12 @@ correct a wrong amount without needing to archive the whole asset.
 - **Assets** — every pocket and asset, with percentage of total, value
   history, and manual value updates.
 - **Monthly Report** — net worth at month end and its change, income vs.
-  spending, an interactive spending-by-category donut chart (hover or click a
-  slice/legend pill to filter the tables below), the asset breakdown with
-  percentages, and full expense listings for the month.
+  spending, a **spending quota** card (set a monthly budget and see what's
+  left, or how far over you are, with a progress bar — set it once and it
+  carries forward to future months until you change it), an interactive
+  spending-by-category donut chart (hover or click a slice/legend pill to
+  filter the tables below), the asset breakdown with percentages, and full
+  expense listings for the month.
 
 ## 7. Backing up your data
 

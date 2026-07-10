@@ -60,7 +60,7 @@ export default function FixedExpenses() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-display text-3xl font-medium text-ink">Fixed monthly expenses</h1>
+        <h1 className="font-display text-3xl font-bold text-ink">Fixed monthly expenses</h1>
         <p className="text-slate mt-1">Rent, subscriptions, insurance — the recurring line items that repeat every month.</p>
       </div>
 

@@ -41,7 +41,7 @@ export default function Dashboard() {
     <div className="space-y-10">
       <div>
         <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-1">
-          {new Date().toLocaleDateString('id-ID', { weekday: 'long', month: 'long', day: 'numeric' })}
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </p>
         <h1 className="font-display text-3xl font-bold text-ink">Your net worth</h1>
       </div>

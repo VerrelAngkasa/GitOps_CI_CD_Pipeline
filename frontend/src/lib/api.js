@@ -13,7 +13,7 @@ export const currency = (n) =>
   );
 
 export const monthLabel = (year, month) =>
-  new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('id-ID', {
+  new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric',
     timeZone: 'UTC',
@@ -33,11 +33,12 @@ export const ASSET_TYPES = [
 ];
 
 export const EXPENSE_CATEGORIES = [
+  'FnBs',
+  'Health',
+  'Sports',
   'Groceries',
-  'Dining',
   'Transport',
   'Shopping',
-  'Health',
   'Entertainment',
   'Bills & Utilities',
   'Travel',
