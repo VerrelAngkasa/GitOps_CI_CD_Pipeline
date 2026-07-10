@@ -33,7 +33,7 @@ Open `.env` and set `JWT_SECRET` to a long random string (used to sign login
 sessions). A placeholder is included — replace it before real use:
 
 ```
-PORT=4000
+PORT=3000
 JWT_SECRET=change_this_to_a_long_random_string_before_real_use
 NODE_ENV=development
 ```
@@ -46,7 +46,7 @@ npm run dev      # auto-restarts on changes, via nodemon
 npm start        # plain node
 ```
 
-The API runs at `http://localhost:4000`. On first boot it creates a SQLite
+The API runs at `http://localhost:3000`. On first boot it creates a SQLite
 database at `backend/data/networth.sqlite` and the tables it needs — no manual
 migration step required.
 
