@@ -93,7 +93,6 @@ export default function FixedExpenses() {
           <label className="block text-xs font-medium text-ink mb-1">Amount</label>
           <input
             type="number"
-            step="1000"
             min="0"
             value={form.amount}
             onChange={(e) => setForm({ ...form, amount: e.target.value })}

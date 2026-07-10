@@ -384,7 +384,6 @@ function QuotaCard({ report, year, month, onSaved }) {
             <label className="block text-xs font-medium text-ink mb-1">Monthly quota</label>
             <input
               type="number"
-              step="1000"
               min="0"
               autoFocus
               value={value}

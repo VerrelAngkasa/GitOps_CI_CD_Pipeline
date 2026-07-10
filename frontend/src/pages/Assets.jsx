@@ -101,7 +101,6 @@ export default function Assets() {
           <label className="block text-xs font-medium text-ink mb-1">Value</label>
           <input
             type="number"
-            step="1000"
             value={form.initialValue}
             onChange={(e) => setForm({ ...form, initialValue: e.target.value })}
             placeholder="0"
@@ -254,7 +253,6 @@ function UpdateValueModal({ asset, onClose, onSaved }) {
             <label className="block text-xs font-medium text-ink mb-1">New value</label>
             <input
               type="number"
-              step="1000"
               autoFocus
               value={value}
               onChange={(e) => setValue(e.target.value)}
