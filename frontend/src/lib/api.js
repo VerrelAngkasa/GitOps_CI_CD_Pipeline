@@ -24,9 +24,9 @@ export const percent = (n) => `${Number(n || 0).toFixed(1)}%`;
 export const ASSET_TYPES = [
   { value: 'cash', label: 'Cash' },
   { value: 'bank', label: 'Bank account' },
+  { value: 'savings', label: 'Savings' },
   { value: 'investment', label: 'Investment' },
   { value: 'crypto', label: 'Crypto' },
-  { value: 'property', label: 'Property' },
   { value: 'vehicle', label: 'Vehicle' },
   { value: 'liability', label: 'Liability (loan, debt)' },
   { value: 'other', label: 'Other' },

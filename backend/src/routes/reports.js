@@ -46,7 +46,12 @@ function resolveQuota(userId, year, month) {
     )
     .get(userId, year, year, month);
   if (!row) return null;
-  return { amount: row.amount, isExact: row.year === year && row.month === month, setFor: { year: row.year, month: row.month } };
+  return {
+    amount: row.amount,
+    assetId: row.asset_id || null,
+    isExact: row.year === year && row.month === month,
+    setFor: { year: row.year, month: row.month },
+  };
 }
 
 router.get('/monthly', (req, res) => {
@@ -98,7 +103,22 @@ router.get('/monthly', (req, res) => {
   }));
 
   const quota = resolveQuota(req.userId, year, month);
-  const spendingLeft = quota ? quota.amount - totalDaily : null;
+  let quotaBlock = null;
+  if (quota) {
+    const quotaSpent = quota.assetId
+      ? dailyExpenses.filter((e) => e.asset_id === quota.assetId).reduce((s, e) => s + e.amount, 0)
+      : totalDaily;
+    const quotaAsset = quota.assetId ? db.prepare('SELECT id, name FROM assets WHERE id = ?').get(quota.assetId) : null;
+    quotaBlock = {
+      amount: quota.amount,
+      isExact: quota.isExact,
+      setFor: quota.setFor,
+      assetId: quota.assetId,
+      assetName: quotaAsset ? quotaAsset.name : null,
+      spent: quotaSpent,
+      left: quota.amount - quotaSpent,
+    };
+  }
 
   res.json({
     year,
@@ -121,9 +141,7 @@ router.get('/monthly', (req, res) => {
       change: currentNetWorth - previousNetWorth,
     },
     assetBreakdown: assetBreakdownWithPct,
-    quota: quota
-      ? { amount: quota.amount, isExact: quota.isExact, setFor: quota.setFor, left: spendingLeft }
-      : null,
+    quota: quotaBlock,
   });
 });
 
@@ -194,11 +212,11 @@ router.get('/quota', (req, res) => {
   const year = Number(req.query.year) || Number(todayISO().slice(0, 4));
   const month = Number(req.query.month) || Number(todayISO().slice(5, 7));
   const quota = resolveQuota(req.userId, year, month);
-  res.json(quota || { amount: null, isExact: false, setFor: null, left: null });
+  res.json(quota || { amount: null, assetId: null, isExact: false, setFor: null, left: null });
 });
 
 router.put('/quota', (req, res) => {
-  const { year, month, amount } = req.body || {};
+  const { year, month, amount, assetId } = req.body || {};
   if (!year || !month || amount === undefined) {
     return res.status(400).json({ error: 'year, month and amount are required.' });
   }
@@ -206,13 +224,17 @@ router.put('/quota', (req, res) => {
   if (Number.isNaN(amt) || amt < 0) {
     return res.status(400).json({ error: 'amount must be a non-negative number.' });
   }
+  const resolvedAssetId = assetId || null;
+  if (resolvedAssetId && !db.prepare('SELECT id FROM assets WHERE id = ? AND user_id = ?').get(resolvedAssetId, req.userId)) {
+    return res.status(400).json({ error: 'Pocket not found.' });
+  }
 
   db.prepare(
-    `INSERT INTO spending_quotas (user_id, year, month, amount) VALUES (?, ?, ?, ?)
-     ON CONFLICT(user_id, year, month) DO UPDATE SET amount = excluded.amount`
-  ).run(req.userId, year, month, amt);
+    `INSERT INTO spending_quotas (user_id, year, month, amount, asset_id) VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(user_id, year, month) DO UPDATE SET amount = excluded.amount, asset_id = excluded.asset_id`
+  ).run(req.userId, year, month, amt, resolvedAssetId);
 
-  res.json({ year, month, amount: amt });
+  res.json({ year, month, amount: amt, assetId: resolvedAssetId });
 });
 
 module.exports = router;

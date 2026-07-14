@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
+  recovery_code_hash TEXT,
   display_name TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -93,27 +94,18 @@ CREATE TABLE IF NOT EXISTS transfers (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- Monthly spending quota (budget). Set for a specific year/month; if a month
--- has none, the most recent earlier quota carries forward.
-CREATE TABLE IF NOT EXISTS spending_quotas (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  year INTEGER NOT NULL,
-  month INTEGER NOT NULL,
-  amount REAL NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  UNIQUE(user_id, year, month)
-);
-
 -- Monthly spending quota (a budget for daily expenses only, not fixed bills).
 -- If no row exists for a given month, the most recent earlier month's quota
 -- carries forward, same as a budget that stays put until you change it.
+-- asset_id, when set, narrows the quota to only count daily expenses drawn
+-- from that one pocket; NULL means it counts daily expenses from any pocket.
 CREATE TABLE IF NOT EXISTS spending_quotas (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   year INTEGER NOT NULL,
   month INTEGER NOT NULL,
   amount REAL NOT NULL,
+  asset_id INTEGER REFERENCES assets(id) ON DELETE SET NULL,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE(user_id, year, month)
 );
@@ -127,5 +119,17 @@ CREATE INDEX IF NOT EXISTS idx_income_user_date ON income_entries(user_id, date)
 CREATE INDEX IF NOT EXISTS idx_transfers_user_date ON transfers(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_quotas_user_period ON spending_quotas(user_id, year, month);
 `);
+
+// Lightweight migrations: add columns that newer versions of the app need,
+// without touching any existing data, for people upgrading an existing database.
+function hasColumn(table, column) {
+  return db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === column);
+}
+if (!hasColumn('users', 'recovery_code_hash')) {
+  db.exec('ALTER TABLE users ADD COLUMN recovery_code_hash TEXT');
+}
+if (!hasColumn('spending_quotas', 'asset_id')) {
+  db.exec('ALTER TABLE spending_quotas ADD COLUMN asset_id INTEGER REFERENCES assets(id) ON DELETE SET NULL');
+}
 
 module.exports = db;

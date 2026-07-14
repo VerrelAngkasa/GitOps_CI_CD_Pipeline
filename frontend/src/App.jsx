@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Setup from './pages/Setup';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import FixedExpenses from './pages/FixedExpenses';
@@ -10,8 +11,16 @@ import Income from './pages/Income';
 import Transfers from './pages/Transfers';
 import Assets from './pages/Assets';
 import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 
-function Gate({ children }) {
+// The signed-out gate — decides between first-run setup and the login form.
+// Rendered only for routes that don't have their own public page (see AppRoutes).
+function SignedOutGate() {
+  const { needsSetup } = useAuth();
+  return needsSetup ? <Setup /> : <Login />;
+}
+
+function AppRoutes() {
   const { user, loading, needsSetup } = useAuth();
 
   if (loading) {
@@ -21,15 +30,15 @@ function Gate({ children }) {
       </div>
     );
   }
-  if (needsSetup) return <Setup />;
-  if (!user) return <Login />;
-  return children;
-}
 
-function AppRoutes() {
   return (
-    <Gate>
-      <Routes>
+    <Routes>
+      {/* Reachable even when signed out, so a forgotten password doesn't need a session. */}
+      <Route path="/reset-password" element={needsSetup ? <Navigate to="/" replace /> : <ResetPassword />} />
+
+      {!user ? (
+        <Route path="*" element={<SignedOutGate />} />
+      ) : (
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="expenses" element={<Expenses />} />
@@ -38,10 +47,11 @@ function AppRoutes() {
           <Route path="transfers" element={<Transfers />} />
           <Route path="assets" element={<Assets />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
-      </Routes>
-    </Gate>
+      )}
+    </Routes>
   );
 }
 

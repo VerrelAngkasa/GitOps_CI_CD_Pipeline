@@ -39,9 +39,11 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (username, password, displayName) => {
+    // Deliberately does not update `user`/`needsSetup` here — the recovery
+    // code screen in Setup.jsx needs to stay mounted until the person
+    // confirms they've saved it. Call refresh() afterwards to complete login.
     const res = await api.post("/auth/register", { username, password, displayName });
-    setUser(res.data);
-    setNeedsSetup(false);
+    return res.data;
   };
 
   const logout = async () => {

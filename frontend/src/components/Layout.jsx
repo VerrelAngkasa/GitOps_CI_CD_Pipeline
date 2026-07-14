@@ -47,12 +47,17 @@ export default function Layout() {
 
         <div className="px-4 py-4 border-t border-line">
           <p className="text-xs text-slate mb-2 truncate">@{user?.username}</p>
-          <button
-            onClick={logout}
-            className="text-sm text-clay font-semibold hover:underline"
-          >
-            Sign out
-          </button>
+          <div className="flex items-center gap-3">
+            <NavLink to="/settings" className="text-sm text-ink font-semibold hover:underline">
+              Settings
+            </NavLink>
+            <button
+              onClick={logout}
+              className="text-sm text-clay font-semibold hover:underline"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </aside>
 

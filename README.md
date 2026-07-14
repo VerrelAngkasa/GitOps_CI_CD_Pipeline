@@ -74,6 +74,13 @@ account — so there's always exactly one login for your data.
 After that, you'll sign in with that username and password on future visits.
 Sessions last 7 days and are stored in an httpOnly cookie.
 
+**If you forget your password**: at account creation you're shown a one-time
+**recovery code** (also regeneratable any time from Settings while logged
+in). On the login page, "Forgot your password?" leads to a reset form asking
+for your username and that code — no email required. Using it to reset your
+password issues a new recovery code automatically, since the old one is spent
+the moment it's used.
+
 ## 5. The pocket model
 
 This app is built around **pockets** — the Assets page is really a list of
@@ -97,9 +104,13 @@ want to include in net worth.
 - **Spending quota** — an optional monthly budget, set from the Monthly
   Report page. It's reduced only by **Daily Expenses** — fixed bills never
   count against it, since a quota is meant to track discretionary spending.
+  You can also tie a quota to one specific pocket (e.g. your everyday
+  "Spending Account") so it only counts expenses drawn from that pocket —
+  spending from Emergency Fund or Travel pockets won't touch it. Leave it as
+  "All daily expenses" to count every daily expense regardless of pocket.
   If you don't set a quota for a given month, the most recent earlier one
-  carries forward automatically; setting a new amount for a month overrides
-  that just for that month onward.
+  (amount and pocket) carries forward automatically; setting a new one for a
+  month overrides that just for that month onward.
 
 Every pocket's "current value" is always its most recent recorded balance.
 Income, transfers, and pocket-linked expenses all write a new balance
@@ -126,6 +137,8 @@ correct a wrong amount without needing to archive the whole asset.
 - **Transfers** — move money between two pockets.
 - **Assets** — every pocket and asset, with percentage of total, value
   history, and manual value updates.
+- **Settings** — change your password, or generate a new recovery code
+  (invalidates the old one).
 - **Monthly Report** — net worth at month end and its change, income vs.
   spending, a **spending quota** card (set a monthly budget and see what's
   left, or how far over you are, with a progress bar — set it once and it

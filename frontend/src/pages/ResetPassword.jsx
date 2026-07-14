@@ -1,32 +1,35 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
+import api from '../lib/api';
 
-export default function Setup() {
-  const { register, refresh } = useAuth();
-  const [form, setForm] = useState({ displayName: '', username: '', password: '', confirm: '' });
+export default function ResetPassword() {
+  const [form, setForm] = useState({ username: '', recoveryCode: '', newPassword: '', confirm: '' });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [recoveryCode, setRecoveryCode] = useState(null);
-  const [confirmed, setConfirmed] = useState(false);
+  const [newRecoveryCode, setNewRecoveryCode] = useState(null);
   const [copied, setCopied] = useState(false);
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (form.password !== form.confirm) {
+    if (form.newPassword !== form.confirm) {
       setError("Passwords don't match.");
       return;
     }
-    if (form.password.length < 8) {
+    if (form.newPassword.length < 8) {
       setError('Password must be at least 8 characters.');
       return;
     }
     setSubmitting(true);
     try {
-      const data = await register(form.username, form.password, form.displayName);
-      setRecoveryCode(data.recoveryCode);
+      const res = await api.post('/auth/reset-password', {
+        username: form.username,
+        recoveryCode: form.recoveryCode,
+        newPassword: form.newPassword,
+      });
+      setNewRecoveryCode(res.data.recoveryCode);
     } catch (err) {
-      setError(err.response?.data?.error || 'Something went wrong. Please try again.');
+      setError(err.response?.data?.error || 'Could not reset your password.');
     } finally {
       setSubmitting(false);
     }
@@ -34,7 +37,7 @@ export default function Setup() {
 
   const onCopy = async () => {
     try {
-      await navigator.clipboard.writeText(recoveryCode);
+      await navigator.clipboard.writeText(newRecoveryCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -42,7 +45,7 @@ export default function Setup() {
     }
   };
 
-  if (recoveryCode) {
+  if (newRecoveryCode) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-paper px-4">
         <div className="w-full max-w-md">
@@ -53,16 +56,18 @@ export default function Setup() {
               </div>
               <span className="font-display text-2xl font-bold text-ink">MyLedger</span>
             </div>
-            <h1 className="font-display text-2xl font-medium text-ink">Save your recovery code</h1>
+            <h1 className="font-display text-2xl font-medium text-ink">Password reset</h1>
             <p className="text-slate mt-2 text-sm">
-              There's no email on this account, so this code is the only way back in if you forget your password.
-              It's shown once — save it somewhere safe now.
+              Your password is updated. That old recovery code is now spent — here's a new one. Save it somewhere
+              safe.
             </p>
           </div>
 
           <div className="bg-card border border-line rounded-2xl p-6 shadow-sm space-y-4">
             <div className="bg-paper-dim border border-line rounded-xl px-4 py-4 text-center">
-              <p className="font-mono mono-num text-xl font-bold text-ink tracking-wider select-all">{recoveryCode}</p>
+              <p className="font-mono mono-num text-xl font-bold text-ink tracking-wider select-all">
+                {newRecoveryCode}
+              </p>
             </div>
             <button
               type="button"
@@ -71,25 +76,12 @@ export default function Setup() {
             >
               {copied ? 'Copied!' : 'Copy to clipboard'}
             </button>
-
-            <label className="flex items-start gap-2.5 text-sm text-ink pt-2">
-              <input
-                type="checkbox"
-                checked={confirmed}
-                onChange={(e) => setConfirmed(e.target.checked)}
-                className="mt-0.5 accent-primary"
-              />
-              I've saved this recovery code somewhere safe.
-            </label>
-
-            <button
-              type="button"
-              disabled={!confirmed}
-              onClick={refresh}
-              className="w-full bg-primary text-white font-semibold rounded-xl py-2.5 shadow-md shadow-primary/30 hover:bg-primary-dark transition-colors disabled:opacity-40"
+            <Link
+              to="/"
+              className="block w-full text-center bg-primary text-white font-semibold rounded-xl py-2.5 shadow-md shadow-primary/30 hover:bg-primary-dark transition-colors"
             >
-              Continue to MyLedger
-            </button>
+              Go to sign in
+            </Link>
           </div>
         </div>
       </div>
@@ -98,7 +90,7 @@ export default function Setup() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-paper px-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2.5 mb-4">
             <div className="badge-logo w-10 h-10 flex items-center justify-center shrink-0">
@@ -106,48 +98,47 @@ export default function Setup() {
             </div>
             <span className="font-display text-2xl font-bold text-ink">MyLedger</span>
           </div>
-          <h1 className="font-display text-2xl font-medium text-ink">Set up your ledger</h1>
-          <p className="text-slate mt-2 text-sm">
-            This creates the one account for this ledger. Registration closes after this step.
-          </p>
+          <h1 className="font-display text-2xl font-medium text-ink">Reset your password</h1>
+          <p className="text-slate mt-2 text-sm">Enter your username and the recovery code you saved at setup.</p>
         </div>
 
         <form onSubmit={onSubmit} className="bg-card border border-line rounded-2xl p-6 space-y-4 shadow-sm">
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1">Name</label>
-            <input
-              type="text"
-              value={form.displayName}
-              onChange={(e) => setForm({ ...form, displayName: e.target.value })}
-              className="w-full border border-line rounded-xl px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Your name"
-            />
-          </div>
           <div>
             <label className="block text-sm font-medium text-ink mb-1">Username</label>
             <input
               type="text"
               required
+              autoFocus
               autoComplete="username"
               value={form.username}
               onChange={(e) => setForm({ ...form, username: e.target.value })}
               className="w-full border border-line rounded-xl px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="e.g. budi"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Password</label>
+            <label className="block text-sm font-medium text-ink mb-1">Recovery code</label>
+            <input
+              type="text"
+              required
+              value={form.recoveryCode}
+              onChange={(e) => setForm({ ...form, recoveryCode: e.target.value })}
+              placeholder="XXXX-XXXX-XXXX-XXXX"
+              className="w-full border border-line rounded-xl px-3 py-2 bg-paper font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1">New password</label>
             <input
               type="password"
               required
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              value={form.newPassword}
+              onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
               className="w-full border border-line rounded-xl px-3 py-2 bg-paper focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="At least 8 characters"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Confirm password</label>
+            <label className="block text-sm font-medium text-ink mb-1">Confirm new password</label>
             <input
               type="password"
               required
@@ -166,9 +157,15 @@ export default function Setup() {
             disabled={submitting}
             className="w-full bg-primary text-white font-semibold rounded-xl py-2.5 shadow-md shadow-primary/30 hover:bg-primary-dark transition-colors disabled:opacity-60"
           >
-            {submitting ? 'Creating account…' : 'Create account'}
+            {submitting ? 'Resetting…' : 'Reset password'}
           </button>
         </form>
+
+        <p className="text-center text-sm text-slate mt-4">
+          <Link to="/" className="text-primary font-semibold hover:underline">
+            Back to sign in
+          </Link>
+        </p>
       </div>
     </div>
   );

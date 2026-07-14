@@ -26,9 +26,14 @@ export default function Reports() {
   const [year, setYear] = useState(now.getUTCFullYear());
   const [month, setMonth] = useState(now.getUTCMonth() + 1);
   const [report, setReport] = useState(null);
+  const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  useEffect(() => {
+    api.get('/assets').then((res) => setAssets(res.data));
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -123,7 +128,7 @@ export default function Reports() {
             </div>
           </div>
 
-          <QuotaCard report={report} year={year} month={month} onSaved={(updated) => setReport(updated)} />
+          <QuotaCard report={report} year={year} month={month} assets={assets} onSaved={(updated) => setReport(updated)} />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
@@ -318,19 +323,21 @@ export default function Reports() {
   );
 }
 
-function QuotaCard({ report, year, month, onSaved }) {
+function QuotaCard({ report, year, month, assets, onSaved }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState('');
+  const [assetId, setAssetId] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const quota = report.quota;
-  const spent = report.totals.daily;
+  const spent = quota?.spent ?? 0;
   const spentPct = quota?.amount ? Math.min(100, (spent / quota.amount) * 100) : 0;
   const over = quota && quota.left < 0;
 
   const startEditing = () => {
     setValue(quota?.amount ? String(quota.amount) : '');
+    setAssetId(quota?.assetId ? String(quota.assetId) : '');
     setError('');
     setEditing(true);
   };
@@ -345,7 +352,7 @@ function QuotaCard({ report, year, month, onSaved }) {
     }
     setSubmitting(true);
     try {
-      await api.put('/reports/quota', { year, month, amount: amt });
+      await api.put('/reports/quota', { year, month, amount: amt, assetId: assetId || null });
       const res = await api.get(`/reports/monthly?year=${year}&month=${month}`);
       onSaved(res.data);
       setEditing(false);
@@ -367,6 +374,11 @@ function QuotaCard({ report, year, month, onSaved }) {
               override it.
             </p>
           )}
+          {quota?.amount != null && (
+            <p className="text-xs text-slate mt-0.5">
+              Tracking: <span className="font-medium text-ink">{quota.assetName || 'all daily expenses'}</span>
+            </p>
+          )}
         </div>
         {!editing && (
           <button
@@ -384,6 +396,7 @@ function QuotaCard({ report, year, month, onSaved }) {
             <label className="block text-xs font-medium text-ink mb-1">Monthly quota</label>
             <input
               type="number"
+              step="1000"
               min="0"
               autoFocus
               value={value}
@@ -391,6 +404,21 @@ function QuotaCard({ report, year, month, onSaved }) {
               placeholder="e.g. 1500000"
               className="border border-line rounded-xl px-2.5 py-2 bg-paper text-sm font-mono w-48 focus:outline-none focus:ring-2 focus:ring-primary"
             />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-ink mb-1">Track spending from</label>
+            <select
+              value={assetId}
+              onChange={(e) => setAssetId(e.target.value)}
+              className="border border-line rounded-xl px-2.5 py-2 bg-paper text-sm w-52 focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="">All daily expenses</option>
+              {assets.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
           </div>
           <button
             type="submit"
@@ -407,6 +435,10 @@ function QuotaCard({ report, year, month, onSaved }) {
             Cancel
           </button>
           {error && <p className="text-clay text-sm w-full">{error}</p>}
+          <p className="text-xs text-slate w-full">
+            Pick a pocket to only count daily expenses drawn from that pocket (e.g. your everyday spending account),
+            or leave it as "All daily expenses" to count every daily expense regardless of pocket.
+          </p>
         </form>
       ) : quota?.amount == null ? (
         <p className="text-slate text-sm">
@@ -426,7 +458,11 @@ function QuotaCard({ report, year, month, onSaved }) {
             <p className="text-sm text-slate">
               <span className="font-mono mono-num text-ink font-semibold">{currency(spent)}</span> of{' '}
               <span className="font-mono mono-num text-ink font-semibold">{currency(quota.amount)}</span>
-              <span className="block text-xs text-slate/80 mt-0.5">Daily spending only — fixed bills aren't counted.</span>
+              <span className="block text-xs text-slate/80 mt-0.5">
+                {quota.assetName
+                  ? `Daily expenses from ${quota.assetName} only.`
+                  : "Daily spending only — fixed bills aren't counted."}
+              </span>
             </p>
           </div>
           <div className="h-2.5 w-full bg-paper-dim rounded-full overflow-hidden">
