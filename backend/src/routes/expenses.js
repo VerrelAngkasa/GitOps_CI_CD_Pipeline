@@ -77,9 +77,23 @@ router.put('/:id', (req, res) => {
   }
   const nextDate = date || existing.date;
 
-  // Reverse the old effect on whichever pocket it used to hit, then apply the new one.
-  if (existing.asset_id) adjustBalance(existing.asset_id, existing.amount, nextDate);
-  if (nextAssetId) adjustBalance(nextAssetId, -amt, nextDate);
+  // Only touch pocket balances if something that actually affects them changed.
+  // Writing a snapshot on every edit (even unrelated fields like description)
+  // was creating noisy, misleading history entries.
+  const amountChanged = amt !== existing.amount;
+  const assetChanged = nextAssetId !== existing.asset_id;
+
+  if (assetChanged) {
+    // Moving between two different pockets (or into/out of "no pocket") —
+    // these are genuinely two separate balances, so both need a write.
+    if (existing.asset_id) adjustBalance(existing.asset_id, existing.amount, nextDate);
+    if (nextAssetId) adjustBalance(nextAssetId, -amt, nextDate);
+  } else if (nextAssetId && amountChanged) {
+    // Same pocket throughout — apply the difference in a single write instead
+    // of reversing the old amount and re-applying the new one as two writes.
+    const delta = existing.amount - amt;
+    if (delta !== 0) adjustBalance(nextAssetId, delta, nextDate);
+  }
 
   db.prepare('UPDATE expenses SET date = ?, category = ?, description = ?, amount = ?, asset_id = ? WHERE id = ?').run(
     nextDate,

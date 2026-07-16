@@ -115,7 +115,6 @@ export default function Transfers() {
             <label className="block text-xs font-medium text-ink mb-1">Amount</label>
             <input
               type="number"
-              min="0"
               value={form.amount}
               onChange={(e) => setForm({ ...form, amount: e.target.value })}
               placeholder="0"

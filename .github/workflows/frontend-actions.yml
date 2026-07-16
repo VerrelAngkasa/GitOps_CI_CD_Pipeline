@@ -1,0 +1,11 @@
+name: Deploy Frontend to AWS S3 and CloudFront
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - fe-v*
+
+jobs:
+  deploy:
+

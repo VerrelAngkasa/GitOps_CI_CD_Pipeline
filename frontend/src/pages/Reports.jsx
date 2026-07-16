@@ -394,7 +394,6 @@ function QuotaCard({ report, year, month, assets, onSaved }) {
             <input
               type="number"
               step="1000"
-              min="0"
               autoFocus
               value={value}
               onChange={(e) => setValue(e.target.value)}
