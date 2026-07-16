@@ -68,9 +68,33 @@ router.get('/monthly', (req, res) => {
     .all(req.userId, start, end);
 
   const fixed = fixedExpensesForMonth(req.userId, start, end);
+  const fixedWithPayment = fixed.map((f) => {
+    const payment = db
+      .prepare('SELECT * FROM fixed_expense_payments WHERE fixed_expense_id = ? AND year = ? AND month = ?')
+      .get(f.id, year, month);
+    let paidFromAsset = null;
+    if (payment) {
+      paidFromAsset = db.prepare('SELECT id, name FROM assets WHERE id = ?').get(payment.asset_id);
+    }
+    const defaultAsset = f.asset_id ? db.prepare('SELECT id, name FROM assets WHERE id = ?').get(f.asset_id) : null;
+    return {
+      ...f,
+      defaultAssetName: defaultAsset ? defaultAsset.name : null,
+      payment: payment
+        ? {
+            id: payment.id,
+            assetId: payment.asset_id,
+            assetName: paidFromAsset ? paidFromAsset.name : null,
+            date: payment.date,
+            amount: payment.amount,
+          }
+        : null,
+    };
+  });
 
   const totalDaily = dailyExpenses.reduce((s, e) => s + e.amount, 0);
   const totalFixed = fixed.reduce((s, e) => s + e.amount, 0);
+  const totalFixedPaid = fixedWithPayment.reduce((s, f) => s + (f.payment ? f.payment.amount : 0), 0);
   const totalIncome = income.reduce((s, e) => s + e.amount, 0);
 
   const byCategoryMap = {};
@@ -125,11 +149,12 @@ router.get('/monthly', (req, res) => {
     month,
     range: { start, end },
     dailyExpenses,
-    fixedExpenses: fixed,
+    fixedExpenses: fixedWithPayment,
     income,
     totals: {
       daily: totalDaily,
       fixed: totalFixed,
+      fixedPaid: totalFixedPaid,
       combined: totalDaily + totalFixed,
       income: totalIncome,
       net: totalIncome - (totalDaily + totalFixed),

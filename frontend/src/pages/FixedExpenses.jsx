@@ -5,6 +5,7 @@ const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export default function FixedExpenses() {
   const [items, setItems] = useState([]);
+  const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [form, setForm] = useState({
@@ -13,18 +14,22 @@ export default function FixedExpenses() {
     amount: '',
     dayOfMonth: 1,
     startDate: todayISO(),
+    assetId: '',
   });
   const [submitting, setSubmitting] = useState(false);
 
   const load = () => {
     setLoading(true);
-    api.get('/fixed-expenses').then((res) => {
-      setItems(res.data);
+    Promise.all([api.get('/fixed-expenses'), api.get('/assets')]).then(([f, a]) => {
+      setItems(f.data);
+      setAssets(a.data);
       setLoading(false);
     });
   };
 
   useEffect(load, []);
+
+  const assetName = (id) => assets.find((a) => a.id === id)?.name;
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -35,7 +40,7 @@ export default function FixedExpenses() {
     }
     setSubmitting(true);
     try {
-      await api.post('/fixed-expenses', { ...form, amount: Number(form.amount) });
+      await api.post('/fixed-expenses', { ...form, amount: Number(form.amount), assetId: form.assetId || null });
       setForm({ ...form, name: '', amount: '' });
       load();
     } catch (err) {
@@ -94,6 +99,7 @@ export default function FixedExpenses() {
           <input
             type="number"
             min="0"
+            step="1000"
             value={form.amount}
             onChange={(e) => setForm({ ...form, amount: e.target.value })}
             placeholder="0"
@@ -119,6 +125,25 @@ export default function FixedExpenses() {
             onChange={(e) => setForm({ ...form, startDate: e.target.value })}
             className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
+        </div>
+        <div className="sm:col-span-6">
+          <label className="block text-xs font-medium text-ink mb-1">Usually paid from</label>
+          <select
+            value={form.assetId}
+            onChange={(e) => setForm({ ...form, assetId: e.target.value })}
+            className="w-full sm:w-64 border border-line rounded-xl px-2.5 py-2 bg-paper text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">No default pocket</option>
+            {assets.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-slate mt-2">
+            This is the default pocket used when you mark a month as paid from the Monthly Report. It doesn't affect
+            your spending quota, which only counts Daily Expenses.
+          </p>
         </div>
         <div className="sm:col-span-6">
           {error && <p className="text-clay text-sm mb-2">{error}</p>}
@@ -154,6 +179,7 @@ export default function FixedExpenses() {
                 <tr className="ledger-rule-single text-left text-xs uppercase tracking-wider text-slate">
                   <th className="px-4 py-2.5 font-medium">Name</th>
                   <th className="px-4 py-2.5 font-medium">Category</th>
+                  <th className="px-4 py-2.5 font-medium">Pocket</th>
                   <th className="px-4 py-2.5 font-medium">Day</th>
                   <th className="px-4 py-2.5 font-medium text-right">Amount</th>
                   <th className="px-4 py-2.5 font-medium">Status</th>
@@ -167,6 +193,7 @@ export default function FixedExpenses() {
                     <td className="px-4 py-2.5">
                       <span className="text-xs bg-paper-dim px-2 py-0.5 rounded-full text-ink">{i.category}</span>
                     </td>
+                    <td className="px-4 py-2.5 text-slate text-xs">{assetName(i.asset_id) || '—'}</td>
                     <td className="px-4 py-2.5 text-slate">Day {i.day_of_month}</td>
                     <td className="px-4 py-2.5 text-right font-mono mono-num text-ink">{currency(i.amount)}</td>
                     <td className="px-4 py-2.5">

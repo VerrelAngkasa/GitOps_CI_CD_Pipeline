@@ -97,20 +97,24 @@ want to include in net worth.
   If you pick "Emergency Fund," only that pocket's balance goes down — your
   other pockets are untouched. Leave it as "None" to just log the spend
   without affecting any pocket balance.
-- **Fixed Expenses** — recurring monthly bills (rent, subscriptions) used for
-  reporting/projection. These are not tied to a pocket balance automatically,
-  since they represent a recurring obligation rather than a single booked
-  transaction.
+- **Fixed Expenses** — recurring monthly bills (rent, subscriptions). Each
+  one can have a default pocket it's usually paid from. The recurring rule
+  itself doesn't touch a pocket balance automatically (there's no scheduler),
+  but on the Monthly Report you can **mark a given month's bill as paid**,
+  which deducts that pocket right away — same as a real transaction — and can
+  be undone if you tap it by mistake. This never affects your spending quota,
+  which only ever looks at Daily Expenses.
 - **Spending quota** — an optional monthly budget, set from the Monthly
   Report page. It's reduced only by **Daily Expenses** — fixed bills never
-  count against it, since a quota is meant to track discretionary spending.
-  You can also tie a quota to one specific pocket (e.g. your everyday
-  "Spending Account") so it only counts expenses drawn from that pocket —
-  spending from Emergency Fund or Travel pockets won't touch it. Leave it as
-  "All daily expenses" to count every daily expense regardless of pocket.
-  If you don't set a quota for a given month, the most recent earlier one
-  (amount and pocket) carries forward automatically; setting a new one for a
-  month overrides that just for that month onward.
+  count against it, even after being marked as paid from a pocket, since a
+  quota is meant to track discretionary spending. You can also tie a quota to
+  one specific pocket (e.g. your everyday "Spending Account") so it only
+  counts expenses drawn from that pocket — spending from Emergency Fund or
+  Travel pockets won't touch it. Leave it as "All daily expenses" to count
+  every daily expense regardless of pocket. If you don't set a quota for a
+  given month, the most recent earlier one (amount and pocket) carries
+  forward automatically; setting a new one for a month overrides that just
+  for that month onward.
 
 Every pocket's "current value" is always its most recent recorded balance.
 Income, transfers, and pocket-linked expenses all write a new balance

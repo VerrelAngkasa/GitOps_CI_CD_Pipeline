@@ -35,9 +35,12 @@ CREATE TABLE IF NOT EXISTS expenses (
 );
 
 -- Fixed monthly expenses (rent, subscriptions, insurance...)
+-- asset_id is the pocket this bill is usually paid from — used as the
+-- default when marking a specific month's occurrence as paid.
 CREATE TABLE IF NOT EXISTS fixed_expenses (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  asset_id INTEGER REFERENCES assets(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
   category TEXT NOT NULL,
   amount REAL NOT NULL,
@@ -46,6 +49,22 @@ CREATE TABLE IF NOT EXISTS fixed_expenses (
   start_date TEXT NOT NULL,         -- YYYY-MM-DD, first month it applies
   end_date TEXT,                    -- YYYY-MM-DD or NULL if ongoing
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Records that a specific month's occurrence of a fixed expense was actually
+-- paid out of a pocket. Creating one deducts the pocket's balance; deleting
+-- one adds it back. One row per (fixed_expense, year, month).
+CREATE TABLE IF NOT EXISTS fixed_expense_payments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  fixed_expense_id INTEGER NOT NULL REFERENCES fixed_expenses(id) ON DELETE CASCADE,
+  asset_id INTEGER NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+  year INTEGER NOT NULL,
+  month INTEGER NOT NULL,
+  date TEXT NOT NULL,
+  amount REAL NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(fixed_expense_id, year, month)
 );
 
 -- Assets / pockets (cash, bank, investments, property, vehicle, etc.)
@@ -113,6 +132,7 @@ CREATE TABLE IF NOT EXISTS spending_quotas (
 CREATE INDEX IF NOT EXISTS idx_expenses_user_date ON expenses(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_expenses_asset ON expenses(asset_id);
 CREATE INDEX IF NOT EXISTS idx_fixed_expenses_user ON fixed_expenses(user_id);
+CREATE INDEX IF NOT EXISTS idx_fixed_expense_payments_lookup ON fixed_expense_payments(fixed_expense_id, year, month);
 CREATE INDEX IF NOT EXISTS idx_assets_user ON assets(user_id);
 CREATE INDEX IF NOT EXISTS idx_asset_values_asset_date ON asset_values(asset_id, date);
 CREATE INDEX IF NOT EXISTS idx_income_user_date ON income_entries(user_id, date);
@@ -130,6 +150,9 @@ if (!hasColumn('users', 'recovery_code_hash')) {
 }
 if (!hasColumn('spending_quotas', 'asset_id')) {
   db.exec('ALTER TABLE spending_quotas ADD COLUMN asset_id INTEGER REFERENCES assets(id) ON DELETE SET NULL');
+}
+if (!hasColumn('fixed_expenses', 'asset_id')) {
+  db.exec('ALTER TABLE fixed_expenses ADD COLUMN asset_id INTEGER REFERENCES assets(id) ON DELETE SET NULL');
 }
 
 module.exports = db;
