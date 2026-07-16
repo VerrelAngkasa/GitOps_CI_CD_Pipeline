@@ -26,8 +26,8 @@ export const ASSET_TYPES = [
   { value: 'bank', label: 'Bank account' },
   { value: 'savings', label: 'Savings' },
   { value: 'investment', label: 'Investment' },
+  { value: 'gold', label: 'Gold' },
   { value: 'crypto', label: 'Crypto' },
-  { value: 'vehicle', label: 'Vehicle' },
   { value: 'liability', label: 'Liability (loan, debt)' },
   { value: 'other', label: 'Other' },
 ];
