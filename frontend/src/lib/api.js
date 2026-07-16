@@ -34,8 +34,7 @@ export const ASSET_TYPES = [
 
 export const EXPENSE_CATEGORIES = [
   'FnBs',
-  'Health',
-  'Sports',
+  'Health & Sports',
   'Groceries',
   'Transport',
   'Shopping',
