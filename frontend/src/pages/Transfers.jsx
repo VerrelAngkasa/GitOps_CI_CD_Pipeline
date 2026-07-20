@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import api, { currency } from '../lib/api';
+import api from '../lib/api';
+import Money from '../components/Money';
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -174,7 +175,9 @@ export default function Transfers() {
                       <span className="font-medium">{assetName(t.to_asset_id)}</span>
                     </td>
                     <td className="px-4 py-2.5 text-slate">{t.description || '—'}</td>
-                    <td className="px-4 py-2.5 text-right font-mono mono-num text-ink">{currency(t.amount)}</td>
+                    <td className="px-4 py-2.5 text-right font-mono mono-num text-ink">
+                      <Money value={t.amount} />
+                    </td>
                     <td className="px-4 py-2.5 text-right">
                       <button onClick={() => onDelete(t.id)} className="text-clay text-xs font-medium hover:underline">
                         Delete

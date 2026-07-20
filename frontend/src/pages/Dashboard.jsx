@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import api, { currency, monthLabel } from '../lib/api';
 import StampNumber from '../components/StampNumber';
+import Money from '../components/Money';
+import { usePrivacy } from '../context/PrivacyContext';
 
 const compactIDR = (v) => {
   const abs = Math.abs(v);
@@ -15,6 +17,7 @@ export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { hidden } = usePrivacy();
 
   useEffect(() => {
     let mounted = true;
@@ -36,6 +39,9 @@ export default function Dashboard() {
   }
 
   const changePositive = summary.netWorthChange >= 0;
+  const monthSpent = summary.monthToDateExpenses + summary.monthFixedExpenses;
+  const savingsRate =
+    summary.monthToDateIncome > 0 ? ((summary.monthToDateIncome - monthSpent) / summary.monthToDateIncome) * 100 : null;
 
   return (
     <div className="space-y-10">
@@ -50,18 +56,32 @@ export default function Dashboard() {
         <StampNumber label="Total net worth" value={summary.netWorth} size="lg" />
         <div className={`px-3 py-1.5 rounded-full ${changePositive ? 'bg-ledger-light' : 'bg-clay-light'}`}>
           <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-0.5">Since last month</p>
-          <p className={`font-mono mono-num text-lg font-bold ${changePositive ? 'text-ledger' : 'text-clay'}`}>
-            {changePositive ? '↑ +' : '↓ '}
-            {currency(summary.netWorthChange)}
-          </p>
+          <Money
+            value={summary.netWorthChange}
+            prefix={changePositive ? '↑ +' : '↓ '}
+            className={`font-mono mono-num text-lg font-bold ${changePositive ? 'text-ledger' : 'text-clay'}`}
+          />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
         <StatCard label="Assets" value={summary.totalAssets} tone="ledger" />
         <StatCard label="Liabilities" value={summary.totalLiabilities} tone="clay" />
         <StatCard label="Income this month" value={summary.monthToDateIncome} tone="ledger" />
-        <StatCard label="Spent this month" value={summary.monthToDateExpenses + summary.monthFixedExpenses} tone="clay" />
+        <StatCard label="Spent this month" value={monthSpent} tone="clay" />
+        <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+          <p className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-slate font-semibold mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-gold" />
+            Savings rate
+          </p>
+          <p
+            className={`font-mono mono-num text-2xl font-bold ${
+              savingsRate === null ? 'text-slate' : savingsRate >= 0 ? 'text-ledger' : 'text-clay'
+            }`}
+          >
+            {hidden ? '••%' : savingsRate === null ? '—' : `${savingsRate.toFixed(1)}%`}
+          </p>
+        </div>
       </div>
 
       <div>
@@ -82,11 +102,11 @@ export default function Dashboard() {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={compactIDR}
+                tickFormatter={(v) => (hidden ? '•••' : compactIDR(v))}
                 width={60}
               />
               <Tooltip
-                formatter={(v) => currency(v)}
+                formatter={(v) => (hidden ? 'Rp ••••••' : currency(v))}
                 contentStyle={{
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: 13,
@@ -121,7 +141,7 @@ function StatCard({ label, value, tone }) {
         <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
         {label}
       </p>
-      <p className={`font-mono mono-num text-2xl font-bold ${toneClass}`}>{currency(value)}</p>
+      <Money value={value} className={`font-mono mono-num text-2xl font-bold ${toneClass}`} />
     </div>
   );
 }

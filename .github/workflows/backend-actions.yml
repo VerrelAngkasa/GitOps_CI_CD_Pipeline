@@ -28,7 +28,6 @@ name: Deploy Backend to AWS ECS
 
 on:
   push:
-    branches: [ "main" ]
     tags:
       - be-v*
 

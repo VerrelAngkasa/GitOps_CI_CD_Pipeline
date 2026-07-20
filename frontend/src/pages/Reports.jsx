@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Sector } from 'recharts';
 import api, { currency, percent, monthLabel } from '../lib/api';
 import StampNumber from '../components/StampNumber';
+import Money from '../components/Money';
+import { usePrivacy } from '../context/PrivacyContext';
 
 const COLORS = ['#7C5CFC', '#0FA968', '#F0446B', '#F5A524', '#3AB0FF', '#B37CFF', '#FF8A5C', '#41C9B4'];
 
@@ -30,6 +32,7 @@ export default function Reports() {
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const { hidden } = usePrivacy();
 
   useEffect(() => {
     api.get('/assets').then((res) => setAssets(res.data));
@@ -100,30 +103,42 @@ export default function Reports() {
                   report.netWorth.change >= 0 ? 'text-ledger' : 'text-clay'
                 }`}
               >
-                {report.netWorth.change >= 0 ? '↑ +' : '↓ '}
-                {currency(report.netWorth.change)}
+                <Money value={report.netWorth.change} prefix={report.netWorth.change >= 0 ? '↑ +' : '↓ '} />
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
             <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
               <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Income</p>
-              <p className="font-mono mono-num text-xl font-bold text-ledger">{currency(report.totals.income)}</p>
+              <Money value={report.totals.income} className="font-mono mono-num text-xl font-bold text-ledger" />
             </div>
             <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
               <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Daily spending</p>
-              <p className="font-mono mono-num text-xl font-bold text-ink">{currency(report.totals.daily)}</p>
+              <Money value={report.totals.daily} className="font-mono mono-num text-xl font-bold text-ink" />
             </div>
             <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
               <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Fixed expenses</p>
-              <p className="font-mono mono-num text-xl font-bold text-ink">{currency(report.totals.fixed)}</p>
+              <Money value={report.totals.fixed} className="font-mono mono-num text-xl font-bold text-ink" />
             </div>
             <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
               <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Net this month</p>
               <p className={`font-mono mono-num text-xl font-bold ${report.totals.net >= 0 ? 'text-ledger' : 'text-clay'}`}>
-                {report.totals.net >= 0 ? '+' : ''}
-                {currency(report.totals.net)}
+                <Money value={report.totals.net} prefix={report.totals.net >= 0 ? '+' : ''} />
+              </p>
+            </div>
+            <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+              <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Savings rate</p>
+              <p
+                className={`font-mono mono-num text-xl font-bold ${
+                  report.totals.income <= 0 ? 'text-slate' : report.totals.net >= 0 ? 'text-ledger' : 'text-clay'
+                }`}
+              >
+                {hidden
+                  ? '••%'
+                  : report.totals.income > 0
+                  ? `${((report.totals.net / report.totals.income) * 100).toFixed(1)}%`
+                  : '—'}
               </p>
             </div>
           </div>
@@ -170,7 +185,7 @@ export default function Reports() {
                           ))}
                         </Pie>
                         <Tooltip
-                          formatter={(v) => currency(v)}
+                          formatter={(v) => (hidden ? 'Rp ••••••' : currency(v))}
                           contentStyle={{
                             fontFamily: 'JetBrains Mono, monospace',
                             fontSize: 13,
@@ -187,7 +202,9 @@ export default function Reports() {
                         {activeIndex !== null ? report.byCategory[activeIndex].category : 'Total'}
                       </p>
                       <p className="font-mono mono-num text-base font-bold text-ink">
-                        {currency(activeIndex !== null ? report.byCategory[activeIndex].amount : report.totals.combined)}
+                        {hidden
+                          ? 'Rp ••••••'
+                          : currency(activeIndex !== null ? report.byCategory[activeIndex].amount : report.totals.combined)}
                       </p>
                     </div>
                   </div>
@@ -244,7 +261,7 @@ export default function Reports() {
                               a.value < 0 ? 'text-clay' : 'text-ink'
                             }`}
                           >
-                            {currency(a.value)}
+                            <Money value={a.value} />
                           </td>
                         </tr>
                       ))
@@ -306,7 +323,9 @@ export default function Reports() {
                           </span>
                         </td>
                         <td className="px-4 py-2.5 text-slate">{e.description || '—'}</td>
-                        <td className="px-4 py-2.5 text-right font-mono mono-num text-ink">{currency(e.amount)}</td>
+                        <td className="px-4 py-2.5 text-right font-mono mono-num text-ink">
+                          <Money value={e.amount} />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -393,7 +412,6 @@ function QuotaCard({ report, year, month, assets, onSaved }) {
             <label className="block text-xs font-medium text-ink mb-1">Monthly quota</label>
             <input
               type="number"
-              step="1000"
               autoFocus
               value={value}
               onChange={(e) => setValue(e.target.value)}
@@ -447,13 +465,14 @@ function QuotaCard({ report, year, month, assets, onSaved }) {
               <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-1">
                 {over ? 'Over by' : 'Left to spend'}
               </p>
-              <p className={`font-mono mono-num text-2xl font-bold ${over ? 'text-clay' : 'text-ledger'}`}>
-                {currency(Math.abs(quota.left))}
-              </p>
+              <Money
+                value={Math.abs(quota.left)}
+                className={`font-mono mono-num text-2xl font-bold ${over ? 'text-clay' : 'text-ledger'}`}
+              />
             </div>
             <p className="text-sm text-slate">
-              <span className="font-mono mono-num text-ink font-semibold">{currency(spent)}</span> of{' '}
-              <span className="font-mono mono-num text-ink font-semibold">{currency(quota.amount)}</span>
+              <Money value={spent} className="font-mono mono-num text-ink font-semibold" /> of{' '}
+              <Money value={quota.amount} className="font-mono mono-num text-ink font-semibold" />
               <span className="block text-xs text-slate/80 mt-0.5">
                 {quota.assetName
                   ? `Daily expenses from ${quota.assetName} only.`
@@ -574,7 +593,9 @@ function FixedExpenseRow({ f, year, month, assets, categoryColor, onSaved }) {
           </button>
         )}
       </td>
-      <td className="px-4 py-2.5 text-right font-mono mono-num text-ink align-top">{currency(f.amount)}</td>
+      <td className="px-4 py-2.5 text-right font-mono mono-num text-ink align-top">
+        <Money value={f.amount} />
+      </td>
     </tr>
   );
 }

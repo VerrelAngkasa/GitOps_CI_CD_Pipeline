@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import api, { currency, EXPENSE_CATEGORIES } from '../lib/api';
+import api, { EXPENSE_CATEGORIES } from '../lib/api';
+import Money from '../components/Money';
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -98,7 +99,6 @@ export default function FixedExpenses() {
           <label className="block text-xs font-medium text-ink mb-1">Amount</label>
           <input
             type="number"
-            step="1000"
             value={form.amount}
             onChange={(e) => setForm({ ...form, amount: e.target.value })}
             placeholder="0"
@@ -161,7 +161,7 @@ export default function FixedExpenses() {
           <h2 className="font-display text-lg font-medium text-ink">Recurring items</h2>
           <p className="text-sm text-slate">
             Active total / month:{' '}
-            <span className="font-mono mono-num text-ink font-semibold">{currency(activeTotal)}</span>
+            <Money value={activeTotal} className="font-mono mono-num text-ink font-semibold" />
           </p>
         </div>
 
@@ -194,7 +194,9 @@ export default function FixedExpenses() {
                     </td>
                     <td className="px-4 py-2.5 text-slate text-xs">{assetName(i.asset_id) || '—'}</td>
                     <td className="px-4 py-2.5 text-slate">Day {i.day_of_month}</td>
-                    <td className="px-4 py-2.5 text-right font-mono mono-num text-ink">{currency(i.amount)}</td>
+                    <td className="px-4 py-2.5 text-right font-mono mono-num text-ink">
+                      <Money value={i.amount} />
+                    </td>
                     <td className="px-4 py-2.5">
                       <button
                         onClick={() => toggleActive(i)}

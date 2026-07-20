@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import api, { currency } from '../lib/api';
+import api from '../lib/api';
+import Money from '../components/Money';
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const SOURCE_SUGGESTIONS = ['Salary', 'Bonus', 'Gift', 'Interest', 'Refund', 'Side income', 'Other'];
@@ -150,7 +151,7 @@ export default function Income() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-display text-lg font-bold text-ink">Entries</h2>
           <p className="text-sm text-slate">
-            Total: <span className="font-mono mono-num text-ledger font-semibold">{currency(total)}</span>
+            Total: <Money value={total} className="font-mono mono-num text-ledger font-semibold" />
           </p>
         </div>
 
@@ -182,7 +183,9 @@ export default function Income() {
                       <span className="text-xs bg-ledger-light text-ledger px-2 py-0.5 rounded-full">{e.source}</span>
                     </td>
                     <td className="px-4 py-2.5 text-slate">{e.description || '—'}</td>
-                    <td className="px-4 py-2.5 text-right font-mono mono-num text-ledger">+{currency(e.amount)}</td>
+                    <td className="px-4 py-2.5 text-right font-mono mono-num text-ledger">
+                      <Money value={e.amount} prefix="+" />
+                    </td>
                     <td className="px-4 py-2.5 text-right">
                       <button onClick={() => onDelete(e.id)} className="text-clay text-xs font-medium hover:underline">
                         Delete

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import api, { currency, percent, ASSET_TYPES } from '../lib/api';
+import api, { percent, ASSET_TYPES } from '../lib/api';
+import Money from '../components/Money';
+import { usePrivacy } from '../context/PrivacyContext';
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -64,11 +66,11 @@ export default function Assets() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
           <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Total assets</p>
-          <p className="font-mono mono-num text-2xl font-bold text-ledger">{currency(totalAssets)}</p>
+          <Money value={totalAssets} className="font-mono mono-num text-2xl font-bold text-ledger" />
         </div>
         <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
           <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Total liabilities</p>
-          <p className="font-mono mono-num text-2xl font-bold text-clay">{currency(totalLiabilities)}</p>
+          <Money value={totalLiabilities} className="font-mono mono-num text-2xl font-bold text-clay" />
         </div>
       </div>
 
@@ -168,7 +170,7 @@ export default function Assets() {
                             a.currentValue < 0 ? 'text-clay' : 'text-ink'
                           }`}
                         >
-                          {currency(a.currentValue)}
+                          <Money value={a.currentValue} />
                         </td>
                         <td className="px-4 py-3 text-right whitespace-nowrap">
                           <button
@@ -224,6 +226,7 @@ function UpdateValueModal({ asset, onClose, onSaved }) {
   const [date, setDate] = useState(todayISO());
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { hidden } = usePrivacy();
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -256,7 +259,7 @@ function UpdateValueModal({ asset, onClose, onSaved }) {
               autoFocus
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              placeholder={String(asset.currentValue)}
+              placeholder={hidden ? '••••••' : String(asset.currentValue)}
               className="w-full border border-line rounded-xl px-2.5 py-2 bg-paper text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -333,7 +336,7 @@ function HistoryModal({ asset, onClose, onChanged }) {
                   <tr key={v.id} className="border-t border-line/70 first:border-t-0">
                     <td className="py-2.5 text-ink">{v.date}</td>
                     <td className="py-2.5 text-right font-mono mono-num text-ink">
-                      {currency(v.value)}
+                      <Money value={v.value} />
                       {i === 0 && (
                         <span className="ml-2 text-[10px] uppercase tracking-wide text-primary font-semibold">
                           current

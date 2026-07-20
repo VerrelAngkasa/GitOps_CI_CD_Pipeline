@@ -1,8 +1,10 @@
 import { currency } from '../lib/api';
+import { usePrivacy } from '../context/PrivacyContext';
 
 // The signature element: headline figures rendered as a bold gradient
 // number in the display face, with a colored dot to key the reader in.
 export default function StampNumber({ label, value, tone = 'ink', size = 'lg' }) {
+  const { hidden } = usePrivacy();
   const gradientClass = { ink: 'number-pop', ledger: 'number-pop-positive', clay: 'number-pop-negative' }[tone];
   const dotClass = { ink: 'bg-primary', ledger: 'bg-ledger', clay: 'bg-clay' }[tone];
   const sizeClass = size === 'lg' ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl';
@@ -15,7 +17,9 @@ export default function StampNumber({ label, value, tone = 'ink', size = 'lg' })
           {label}
         </p>
       )}
-      <p className={`font-display font-bold ${sizeClass} ${gradientClass} leading-none`}>{currency(value)}</p>
+      <p className={`font-display font-bold ${sizeClass} ${gradientClass} leading-none`}>
+        {hidden ? 'Rp ••••••••' : currency(value)}
+      </p>
     </div>
   );
 }

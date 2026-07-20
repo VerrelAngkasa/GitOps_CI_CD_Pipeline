@@ -1,5 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { usePrivacy } from '../context/PrivacyContext';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', end: true },
@@ -13,17 +15,26 @@ const NAV_ITEMS = [
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { hidden, toggle } = usePrivacy();
 
   return (
     <div className="min-h-screen bg-paper flex">
       <aside className="w-60 shrink-0 border-r border-line bg-card flex flex-col">
-        <div className="px-6 py-6 border-b border-line">
+        <div className="px-6 py-6 border-b border-line space-y-3">
           <div className="flex items-center gap-2.5">
             <div className="badge-logo w-9 h-9 flex items-center justify-center shrink-0">
               <span className="font-display text-lg font-bold text-white">L</span>
             </div>
             <span className="font-display text-xl font-bold text-ink">MyLedger</span>
           </div>
+          <button
+            onClick={toggle}
+            className="flex items-center gap-2 w-full text-xs font-semibold text-ink bg-paper-dim hover:bg-line/60 rounded-xl px-3 py-2 transition-colors"
+            title={hidden ? 'Show balances' : 'Hide balances'}
+          >
+            {hidden ? <EyeOff size={15} /> : <Eye size={15} />}
+            {hidden ? 'Balances hidden' : 'Balances visible'}
+          </button>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
