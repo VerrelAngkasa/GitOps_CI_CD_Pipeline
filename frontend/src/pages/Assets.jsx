@@ -64,11 +64,11 @@ export default function Assets() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+        <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4 min-w-0">
           <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Total assets</p>
           <Money value={totalAssets} className="font-mono mono-num text-2xl font-bold text-ledger" />
         </div>
-        <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+        <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4 min-w-0">
           <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Total liabilities</p>
           <Money value={totalLiabilities} className="font-mono mono-num text-2xl font-bold text-clay" />
         </div>

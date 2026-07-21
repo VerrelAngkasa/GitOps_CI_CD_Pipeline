@@ -108,26 +108,26 @@ export default function Reports() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
-            <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+            <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4 min-w-0">
               <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Income</p>
               <Money value={report.totals.income} className="font-mono mono-num text-xl font-bold text-ledger" />
             </div>
-            <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+            <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4 min-w-0">
               <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Daily spending</p>
               <Money value={report.totals.daily} className="font-mono mono-num text-xl font-bold text-ink" />
             </div>
-            <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+            <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4 min-w-0">
               <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Fixed expenses</p>
               <Money value={report.totals.fixed} className="font-mono mono-num text-xl font-bold text-ink" />
             </div>
-            <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+            <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4 min-w-0">
               <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Net this month</p>
               <p className={`font-mono mono-num text-xl font-bold ${report.totals.net >= 0 ? 'text-ledger' : 'text-clay'}`}>
                 <Money value={report.totals.net} prefix={report.totals.net >= 0 ? '+' : ''} />
               </p>
             </div>
-            <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+            <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4 min-w-0">
               <p className="text-xs uppercase tracking-wider text-slate font-semibold mb-2">Savings rate</p>
               <p
                 className={`font-mono mono-num text-xl font-bold ${

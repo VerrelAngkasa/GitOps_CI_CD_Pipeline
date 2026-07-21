@@ -10,14 +10,14 @@ export default function StampNumber({ label, value, tone = 'ink', size = 'lg' })
   const sizeClass = size === 'lg' ? 'text-4xl md:text-5xl' : 'text-2xl md:text-3xl';
 
   return (
-    <div className="inline-block">
+    <div className="inline-block max-w-full">
       {label && (
         <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-slate mb-2 font-semibold">
           <span className={`w-2 h-2 rounded-full ${dotClass}`} />
           {label}
         </p>
       )}
-      <p className={`font-display font-bold ${sizeClass} ${gradientClass} leading-none`}>
+      <p className={`font-display font-bold ${sizeClass} ${gradientClass} leading-none break-words [overflow-wrap:anywhere]`}>
         {hidden ? 'Rp ••••••••' : currency(value)}
       </p>
     </div>

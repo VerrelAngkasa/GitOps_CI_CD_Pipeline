@@ -64,18 +64,18 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         <StatCard label="Assets" value={summary.totalAssets} tone="ledger" />
         <StatCard label="Liabilities" value={summary.totalLiabilities} tone="clay" />
         <StatCard label="Income" value={summary.monthToDateIncome} tone="ledger" />
         <StatCard label="Total spent" value={monthSpent} tone="clay" />
-        <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+        <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4 min-w-0">
           <p className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-slate font-semibold mb-2">
             <span className="w-1.5 h-1.5 rounded-full bg-gold" />
             Savings rate
           </p>
           <p
-            className={`font-mono mono-num text-2xl font-bold ${
+            className={`font-mono mono-num text-xl font-bold ${
               savingsRate === null ? 'text-slate' : savingsRate >= 0 ? 'text-ledger' : 'text-clay'
             }`}
           >
@@ -136,12 +136,12 @@ function StatCard({ label, value, tone }) {
   const toneClass = { ledger: 'text-ledger', clay: 'text-clay', ink: 'text-ink' }[tone];
   const dotClass = { ledger: 'bg-ledger', clay: 'bg-clay', ink: 'bg-primary' }[tone];
   return (
-    <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4">
+    <div className="card-pop bg-card border border-line rounded-2xl shadow-sm p-4 min-w-0">
       <p className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-slate font-semibold mb-2">
         <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
         {label}
       </p>
-      <Money value={value} className={`font-mono mono-num text-2xl font-bold ${toneClass}`} />
+      <Money value={value} className={`font-mono mono-num text-xl font-bold ${toneClass}`} />
     </div>
   );
 }

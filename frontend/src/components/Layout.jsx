@@ -73,7 +73,7 @@ export default function Layout() {
       </aside>
 
       <main className="flex-1 min-w-0">
-        <div className="max-w-5xl mx-auto px-6 py-8 md:px-10 md:py-10">
+        <div className="max-w-6xl mx-auto px-6 py-8 md:px-10 md:py-10">
           <Outlet />
         </div>
       </main>
