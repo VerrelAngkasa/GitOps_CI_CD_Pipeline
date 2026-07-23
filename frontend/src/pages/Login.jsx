@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, sessionExpired, clearSessionExpired } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -12,6 +12,7 @@ export default function Login() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    clearSessionExpired();
     setSubmitting(true);
     try {
       await login(username, password);
@@ -34,6 +35,12 @@ export default function Login() {
           </div>
           <h1 className="font-display text-2xl font-medium text-ink">Welcome back</h1>
         </div>
+
+        {sessionExpired && (
+          <p className="text-gold text-sm bg-gold-light border border-gold/30 rounded-xl px-3 py-2 mb-4 text-center">
+            You were signed out due to inactivity. Please sign in again.
+          </p>
+        )}
 
         <form onSubmit={onSubmit} className="bg-card border border-line rounded-2xl p-6 space-y-4 shadow-sm">
           <div>

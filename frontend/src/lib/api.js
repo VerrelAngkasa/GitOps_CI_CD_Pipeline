@@ -5,6 +5,27 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Routes where a 401 means "wrong credentials", not "your session expired" —
+// these should never trigger the global session-expired handler below.
+const AUTH_ENTRY_POINTS = ['/auth/login', '/auth/register', '/auth/reset-password', '/auth/setup-status'];
+
+let sessionExpiredHandler = null;
+export function onSessionExpired(handler) {
+  sessionExpiredHandler = handler;
+}
+
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const url = err.config?.url || '';
+    const isAuthEntryPoint = AUTH_ENTRY_POINTS.some((p) => url.includes(p));
+    if (err.response?.status === 401 && !isAuthEntryPoint) {
+      sessionExpiredHandler?.();
+    }
+    return Promise.reject(err);
+  }
+);
+
 export default api;
 
 export const currency = (n) =>

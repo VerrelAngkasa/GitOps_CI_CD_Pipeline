@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   recovery_code_hash TEXT,
   display_name TEXT,
+  idle_timeout_minutes INTEGER NOT NULL DEFAULT 15,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -153,6 +154,9 @@ if (!hasColumn('spending_quotas', 'asset_id')) {
 }
 if (!hasColumn('fixed_expenses', 'asset_id')) {
   db.exec('ALTER TABLE fixed_expenses ADD COLUMN asset_id INTEGER REFERENCES assets(id) ON DELETE SET NULL');
+}
+if (!hasColumn('users', 'idle_timeout_minutes')) {
+  db.exec('ALTER TABLE users ADD COLUMN idle_timeout_minutes INTEGER NOT NULL DEFAULT 15');
 }
 
 module.exports = db;

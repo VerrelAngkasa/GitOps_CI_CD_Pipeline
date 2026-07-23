@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import api from '../lib/api';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import api, { onSessionExpired } from '../lib/api';
 
 const AuthContext = createContext(null);
 
@@ -7,6 +7,8 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [needsSetup, setNeedsSetup] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const hadUserRef = useRef(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -33,8 +35,23 @@ export function AuthProvider({ children }) {
     refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    hadUserRef.current = !!user;
+  }, [user]);
+
+  useEffect(() => {
+    // A 401 from any authenticated request means the session lapsed (idle
+    // timeout or the 7-day ceiling). Only show the "signed out" message if
+    // we actually had a live session — not on a plain first visit.
+    onSessionExpired(() => {
+      if (hadUserRef.current) setSessionExpired(true);
+      setUser(null);
+    });
+  }, []);
+
   const login = async (username, password) => {
     const res = await api.post("/auth/login", { username, password });
+    setSessionExpired(false);
     setUser(res.data);
   };
 
@@ -52,7 +69,9 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, needsSetup, login, register, logout, refresh }}>
+    <AuthContext.Provider
+      value={{ user, loading, needsSetup, sessionExpired, clearSessionExpired: () => setSessionExpired(false), login, register, logout, refresh }}
+    >
       {children}
     </AuthContext.Provider>
   );

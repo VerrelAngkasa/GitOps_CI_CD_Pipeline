@@ -14,6 +14,7 @@ export default function Settings() {
 
       <ChangePasswordCard />
       <RecoveryCodeCard />
+      <SessionTimeoutCard />
     </div>
   );
 }
@@ -185,6 +186,68 @@ function RecoveryCodeCard() {
           {error && <p className="text-clay text-sm w-full">{error}</p>}
         </form>
       )}
+    </div>
+  );
+}
+
+function SessionTimeoutCard() {
+  const { user, refresh } = useAuth();
+  const [minutes, setMinutes] = useState(user?.idleTimeoutMinutes || 15);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const OPTIONS = [5, 15, 30, 60, 120];
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess(false);
+    setSubmitting(true);
+    try {
+      await api.put('/auth/session-settings', { idleTimeoutMinutes: Number(minutes) });
+      await refresh();
+      setSuccess(true);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Could not update session timeout.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bg-card border border-line rounded-2xl shadow-sm p-5">
+      <h2 className="font-display text-lg font-bold text-ink mb-1">Auto sign-out</h2>
+      <p className="text-sm text-slate mb-4">
+        You'll be signed out automatically after this much time without activity. Every action you take resets the
+        clock, and there's a 7-day limit either way for safety.
+      </p>
+
+      <form onSubmit={onSubmit} className="flex flex-wrap items-end gap-3">
+        <div>
+          <label className="block text-xs font-medium text-ink mb-1">Sign out after</label>
+          <select
+            value={minutes}
+            onChange={(e) => setMinutes(e.target.value)}
+            className="border border-line rounded-xl px-3 py-2 bg-paper text-sm w-48 focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            {OPTIONS.map((m) => (
+              <option key={m} value={m}>
+                {m < 60 ? `${m} minutes` : `${m / 60} hour${m > 60 ? 's' : ''}`}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="bg-primary text-white font-semibold rounded-xl px-4 py-2 text-sm shadow-md shadow-primary/25 hover:bg-primary-dark transition-colors disabled:opacity-60"
+        >
+          Save
+        </button>
+        {error && <p className="text-clay text-sm w-full">{error}</p>}
+        {success && <p className="text-ledger text-sm w-full">Saved.</p>}
+      </form>
     </div>
   );
 }

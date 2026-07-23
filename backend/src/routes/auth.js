@@ -1,18 +1,13 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const db = require('../db');
-const { requireAuth, JWT_SECRET } = require('../middleware/auth');
+const { requireAuth, startSession, COOKIE_OPTS } = require('../middleware/auth');
 const { generateRecoveryCode } = require('../utils/recoveryCode');
 
 const router = express.Router();
 
-const COOKIE_OPTS = {
-  httpOnly: true,
-  sameSite: 'lax',
-  secure: process.env.NODE_ENV === 'production',
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-};
+const MIN_IDLE_TIMEOUT = 1;
+const MAX_IDLE_TIMEOUT = 240; // 4 hours
 
 // Registration is only allowed while there are zero users, so this app
 // stays single-user. Once an account exists, this route is closed.
@@ -41,10 +36,16 @@ router.post('/register', (req, res) => {
     .prepare('INSERT INTO users (username, password_hash, recovery_code_hash, display_name) VALUES (?, ?, ?, ?)')
     .run(username.toLowerCase().trim(), passwordHash, recoveryCodeHash, displayName || null);
 
-  const token = jwt.sign({ userId: info.lastInsertRowid }, JWT_SECRET, { expiresIn: '7d' });
-  res.cookie('token', token, COOKIE_OPTS);
+  const user = db.prepare('SELECT idle_timeout_minutes FROM users WHERE id = ?').get(info.lastInsertRowid);
+  startSession(res, info.lastInsertRowid, user.idle_timeout_minutes);
   // The recovery code is only ever shown once, right here — it's not recoverable after this.
-  res.json({ id: info.lastInsertRowid, username, displayName: displayName || null, recoveryCode });
+  res.json({
+    id: info.lastInsertRowid,
+    username,
+    displayName: displayName || null,
+    idleTimeoutMinutes: user.idle_timeout_minutes,
+    recoveryCode,
+  });
 });
 
 router.get('/setup-status', (req, res) => {
@@ -63,9 +64,13 @@ router.post('/login', (req, res) => {
     return res.status(401).json({ error: 'Invalid username or password.' });
   }
 
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
-  res.cookie('token', token, COOKIE_OPTS);
-  res.json({ id: user.id, username: user.username, displayName: user.display_name });
+  startSession(res, user.id, user.idle_timeout_minutes);
+  res.json({
+    id: user.id,
+    username: user.username,
+    displayName: user.display_name,
+    idleTimeoutMinutes: user.idle_timeout_minutes,
+  });
 });
 
 router.post('/logout', (req, res) => {
@@ -74,9 +79,32 @@ router.post('/logout', (req, res) => {
 });
 
 router.get('/me', requireAuth, (req, res) => {
-  const user = db.prepare('SELECT id, username, display_name FROM users WHERE id = ?').get(req.userId);
+  const user = db
+    .prepare('SELECT id, username, display_name, idle_timeout_minutes FROM users WHERE id = ?')
+    .get(req.userId);
   if (!user) return res.status(404).json({ error: 'User not found' });
-  res.json({ id: user.id, username: user.username, displayName: user.display_name });
+  res.json({
+    id: user.id,
+    username: user.username,
+    displayName: user.display_name,
+    idleTimeoutMinutes: user.idle_timeout_minutes,
+  });
+});
+
+// How long the session stays alive without activity before requiring sign-in
+// again. Every authenticated request silently extends the session (see the
+// requireAuth middleware), so this only matters after genuine inactivity —
+// there's also a fixed 7-day ceiling regardless of activity, for safety.
+router.put('/session-settings', requireAuth, (req, res) => {
+  const { idleTimeoutMinutes } = req.body || {};
+  const minutes = Number(idleTimeoutMinutes);
+  if (!Number.isFinite(minutes) || minutes < MIN_IDLE_TIMEOUT || minutes > MAX_IDLE_TIMEOUT) {
+    return res.status(400).json({ error: `Choose a timeout between ${MIN_IDLE_TIMEOUT} and ${MAX_IDLE_TIMEOUT} minutes.` });
+  }
+
+  db.prepare('UPDATE users SET idle_timeout_minutes = ? WHERE id = ?').run(minutes, req.userId);
+  startSession(res, req.userId, minutes); // refresh the cookie so the new duration applies immediately
+  res.json({ idleTimeoutMinutes: minutes });
 });
 
 // Forgotten-password recovery: no login required, but you need the recovery

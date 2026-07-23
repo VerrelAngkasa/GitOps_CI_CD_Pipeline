@@ -141,8 +141,9 @@ correct a wrong amount without needing to archive the whole asset.
 - **Transfers** — move money between two pockets.
 - **Assets** — every pocket and asset, with percentage of total, value
   history, and manual value updates.
-- **Settings** — change your password, or generate a new recovery code
-  (invalidates the old one).
+- **Settings** — change your password, generate a new recovery code
+  (invalidates the old one), or set how long you can stay idle before being
+  automatically signed out.
 - **Monthly Report** — net worth at month end and its change, income vs.
   spending, a **spending quota** card (set a monthly budget and see what's
   left, or how far over you are, with a progress bar — set it once and it
@@ -183,3 +184,10 @@ This app is built for personal, local use. The single-account model, JWT
 cookie auth, and bcrypt password hashing are reasonable for that. If you ever
 expose it beyond your own machine (e.g. host it on the internet), put it
 behind HTTPS and treat `JWT_SECRET` as a real secret.
+
+**Auto sign-out**: your session uses a sliding idle timeout — every request
+you make while using the app quietly extends it, so it only expires after
+genuine inactivity (5 minutes to 2 hours, configurable in Settings; 15
+minutes by default). There's also a fixed 7-day ceiling on any single
+session regardless of activity, so you're never signed into the same session
+indefinitely even with constant use.
